@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "403229043292",
+    "project_id": "sistema-alertas-felcv",
+    "storage_bucket": "sistema-alertas-felcv.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:403229043292:android:3ea1466e6c71797b541499",
+        "android_client_info": {
+          "package_name": "com.rubendavid.botonpanico"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdOI8jecFZ2pa4393-s4n53NJGAtylxg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

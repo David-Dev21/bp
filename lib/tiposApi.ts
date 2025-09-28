@@ -1,0 +1,91 @@
+// Tipos e interfaces comunes para respuestas de API
+export interface RespuestaBase<T = any> {
+  exito: boolean;
+  codigo: number;
+  mensaje: string;
+  datos?: T;
+}
+
+// Tipos específicos para datos comunes
+export interface DatosMunicipio {
+  id: number;
+  municipio: string;
+}
+
+export interface DatosProvincia {
+  id: number;
+  provincia: string;
+}
+
+export interface DatosDepartamento {
+  id: number;
+  departamento: string;
+}
+
+export interface DatosUbicacionGeografica {
+  municipio: DatosMunicipio;
+  provincia: DatosProvincia;
+  departamento: DatosDepartamento;
+}
+
+// Estados de alerta
+export type EstadoAlerta = 'PENDIENTE' | 'ASIGNADA' | 'EN_ATENCION' | 'RESUELTA' | 'CANCELADA' | 'FALSA_ALERTA';
+
+// Estados de cuenta
+export type EstadoCuenta = 'ACTIVA' | 'INACTIVA' | 'SUSPENDIDA' | 'PENDIENTE_VERIFICACION';
+
+// Interfaces para víctimas
+export interface ContactoEmergencia {
+  id?: string;
+  parentesco: string;
+  nombreCompleto: string;
+  celular: string;
+  principal?: boolean;
+}
+
+export interface DireccionVictima {
+  zona?: string;
+  calle?: string;
+  numero?: string;
+  referencia?: string;
+}
+
+export interface PerfilVictima {
+  id?: string;
+  cedulaIdentidad?: string;
+  nombres?: string;
+  apellidos?: string;
+  fechaNacimiento?: string;
+  celular?: string;
+  correo?: string;
+  idMunicipio?: number;
+  municipio?: string;
+  provincia?: string;
+  departamento?: string;
+  direccion?: DireccionVictima;
+  estadoCuenta?: EstadoCuenta;
+  fechaRegistro?: string;
+  idDispositivo?: string;
+  fcmToken?: string;
+  apiKey?: string;
+  contactosEmergencia?: ContactoEmergencia[];
+}
+
+// Interfaces específicas para respuestas de víctimas
+// Interfaces específicas para respuestas de víctimas
+export interface RespuestaVerificarVictima
+  extends RespuestaBase<{ existe: boolean; idVictima?: string; estadoCuenta?: EstadoCuenta; idDispositivo?: string }> {}
+
+export interface RespuestaCrearVictima extends RespuestaBase<{ victima: { id: string } }> {}
+
+export interface RespuestaActualizarVictima extends RespuestaBase<{ victima: { id: string } }> {}
+
+export interface RespuestaObtenerPerfil extends RespuestaBase<PerfilVictima> {}
+
+export interface RespuestaCrearAlerta extends RespuestaBase<{ alerta: { id: string; estadoAlerta: EstadoAlerta } }> {}
+
+export interface RespuestaEstadoAlerta extends RespuestaBase<{ estadoAlerta: EstadoAlerta }> {}
+
+export interface RespuestaUbicacionGPS extends RespuestaBase<DatosUbicacionGeografica> {}
+
+export interface RespuestaVerificarCuenta extends RespuestaBase<{ estadoCuenta: EstadoCuenta }> {}
