@@ -1,4 +1,5 @@
-import { alertasApi } from '../base/alertasApi';
+import { alertasApi } from "../base/alertasApi";
+import { useAtenticacionStore } from "~/stores/victimas/atenticacionStore";
 import {
   RespuestaVerificarVictima,
   RespuestaCrearVictima,
@@ -6,7 +7,7 @@ import {
   RespuestaObtenerPerfil,
   RespuestaVerificarCuenta,
   PerfilVictima,
-} from '../../lib/tiposApi';
+} from "../../lib/tiposApi";
 
 export class VictimaService {
   // Verificar si ya existe el usuario en la app botón de pánico
@@ -15,15 +16,15 @@ export class VictimaService {
       const response = await alertasApi.get(`/victimas/verificar?ci=${ci}`);
       return response;
     } catch (error: any) {
-      if (error.message?.includes('404')) {
+      if (error.message?.includes("404")) {
         return {
           exito: false,
           codigo: 404,
-          mensaje: 'Usuario no encontrado',
+          mensaje: "Usuario no encontrado",
           datos: { existe: false },
         };
       }
-      throw new Error('Error al verificar usuario');
+      throw new Error("Error al verificar usuario");
     }
   }
 
@@ -33,22 +34,22 @@ export class VictimaService {
       const response = await alertasApi.get(`/victimas/${idVictima}`);
       return response;
     } catch (error: any) {
-      if (error.message?.includes('404')) {
+      if (error.message?.includes("404")) {
         return {
           exito: false,
           codigo: 404,
-          mensaje: 'Usuario no encontrado',
+          mensaje: "Usuario no encontrado",
           datos: undefined,
         };
       }
-      throw new Error('Error al obtener perfil');
+      throw new Error("Error al obtener perfil");
     }
   }
 
   // Registrar usuario en la app botón de pánico
   static async registrarVictima(profileData: PerfilVictima): Promise<RespuestaCrearVictima> {
     try {
-      const response = await alertasApi.post('/victimas', profileData);
+      const response = await alertasApi.post("/victimas", profileData);
       return response;
     } catch (error: any) {
       // Solo usar el mensaje de error que viene del servidor
@@ -60,14 +61,19 @@ export class VictimaService {
         throw new Error(datosError.mensaje);
       }
       // Si no hay mensaje específico del servidor, usar genérico
-      throw new Error('Error del servidor');
+      throw new Error("Error del servidor");
     }
   }
 
   // Actualizar perfil de víctima
   static async actualizarVictima(idVictima: string, profileData: Partial<PerfilVictima>): Promise<RespuestaActualizarVictima> {
     try {
-      const response = await alertasApi.patch(`/victimas/${idVictima}`, profileData);
+      const { apiKey } = useAtenticacionStore.getState();
+      const response = await alertasApi.patch(`/victimas/${idVictima}`, profileData, {
+        headers: {
+          "X-API-Key": apiKey,
+        },
+      });
       return response;
     } catch (error: any) {
       // Solo usar el mensaje de error que viene del servidor
@@ -79,7 +85,7 @@ export class VictimaService {
         throw new Error(datosError.mensaje);
       }
       // Si no hay mensaje específico del servidor, usar genérico
-      throw new Error('Error del servidor');
+      throw new Error("Error del servidor");
     }
   }
 
@@ -89,7 +95,7 @@ export class VictimaService {
       const response = await alertasApi.get(`/victimas/${idVictima}/verificar-cuenta`);
       return response;
     } catch (error: any) {
-      throw new Error('Error al verificar estado de cuenta');
+      throw new Error("Error al verificar estado de cuenta");
     }
   }
 }

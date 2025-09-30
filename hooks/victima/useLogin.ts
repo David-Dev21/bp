@@ -1,11 +1,11 @@
-import { useRouter } from 'expo-router';
-import { Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAtenticacionStore } from '~/stores/victimas/atenticacionStore';
-import { VictimaService } from '~/services/victima/victimaService';
-import { DenunciasService } from '~/services/victima/denunciasService';
-import { useRegistroStore } from '~/stores/registro/registroStore';
-import { PerfilVictima, ContactoEmergencia } from '~/lib/tiposApi';
+import { useRouter } from "expo-router";
+import { Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAtenticacionStore } from "~/stores/victimas/atenticacionStore";
+import { VictimaService } from "~/services/victima/victimaService";
+import { DenunciasService } from "~/services/victima/denunciasService";
+import { useRegistroStore } from "~/stores/registro/registroStore";
+import { PerfilVictima, ContactoEmergencia } from "~/lib/tiposApi";
 
 export const useLogin = () => {
   const router = useRouter();
@@ -15,7 +15,7 @@ export const useLogin = () => {
   const verificarDenuncia = async (codigoDenuncia: string, cedulaIdentidad: string) => {
     const verificacion = await DenunciasService.verificarDenunciaPorCodigoYCedula(codigoDenuncia, cedulaIdentidad);
     if (!verificacion.exito || !verificacion.datos?.codigoValido) {
-      Alert.alert('Código inválido', 'El código de denuncia no existe o es incorrecto. Verifícalo con las autoridades.');
+      Alert.alert("Código inválido", "El código de denuncia no existe o es incorrecto. Verifícalo con las autoridades.");
       return false;
     }
     return true;
@@ -33,9 +33,9 @@ export const useLogin = () => {
     const perfil = await VictimaService.obtenerPerfilPorIdVictima(idVictima);
     if (perfil.exito && perfil.datos) {
       setUsuario(perfil.datos.id!, perfil.datos.apiKey!);
-      router.push('/alerta');
+      router.push("/alerta");
     } else {
-      Alert.alert('Error', 'No se pudo cargar tu información');
+      Alert.alert("Error", "No se pudo cargar tu información");
     }
   };
 
@@ -43,15 +43,15 @@ export const useLogin = () => {
     const perfil = await VictimaService.obtenerPerfilPorIdVictima(idVictima);
     if (perfil.exito && perfil.datos) {
       cargarDatosPerfil(perfil.datos);
-      router.push('/solicitar-codigo' as any);
+      router.push("/solicitar-codigo" as any);
     } else {
-      Alert.alert('Error', 'No se pudo cargar tu información');
+      Alert.alert("Error", "No se pudo cargar tu información");
     }
   };
 
   const manejarUsuarioNuevo = (cedulaIdentidad: string) => {
     router.push({
-      pathname: '/registro',
+      pathname: "/registro",
       params: { cedulaIdentidad },
     });
   };
@@ -72,26 +72,26 @@ export const useLogin = () => {
       }
 
       // Paso 3: Verificar idDispositivo
+      const idVictima = datosUsuario.idVictima!;
       const idDispositivo = datosUsuario.idDispositivo;
-      const storedId = await AsyncStorage.getItem('id_dispositivo');
+      const storedId = await AsyncStorage.getItem("id_dispositivo");
       if (storedId && idDispositivo && idDispositivo !== storedId) {
-        Alert.alert('Sesión iniciada en otro dispositivo', '¿Quieres cambiar la sesión a este dispositivo?', [
-          { text: 'Cancelar', style: 'cancel' },
-          { text: 'Cambiar', onPress: () => manejarUsuarioPendiente(idVictima) },
+        Alert.alert("Sesión iniciada en otro dispositivo", "¿Quieres cambiar la sesión a este dispositivo?", [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Cambiar", onPress: () => manejarUsuarioPendiente(idVictima) },
         ]);
         return;
       }
 
       // Paso 4: Manejar según estado de cuenta
-      const idVictima = datosUsuario.idVictima!;
-      if (datosUsuario.estadoCuenta === 'PENDIENTE_VERIFICACION') {
+      if (datosUsuario.estadoCuenta === "PENDIENTE_VERIFICACION") {
         await manejarUsuarioPendiente(idVictima);
       } else {
         await manejarUsuarioValidado(idVictima);
       }
     } catch (error: any) {
-      console.error('Error:', error);
-      Alert.alert('Error', 'Algo salió mal. Intenta nuevamente.');
+      console.error("Error:", error);
+      Alert.alert("Error", "Algo salió mal. Intenta nuevamente.");
     }
   };
 
@@ -111,10 +111,10 @@ export const useLogin = () => {
       provincia: datosPerfil.provincia,
       departamento: datosPerfil.departamento,
       direccion: {
-        zona: datosPerfil.direccion?.zona || '',
-        calle: datosPerfil.direccion?.calle || '',
-        numero: datosPerfil.direccion?.numero || '',
-        referencia: datosPerfil.direccion?.referencia || '',
+        zona: datosPerfil.direccion?.zona || "",
+        calle: datosPerfil.direccion?.calle || "",
+        numero: datosPerfil.direccion?.numero || "",
+        referencia: datosPerfil.direccion?.referencia || "",
       },
     });
 
@@ -124,7 +124,7 @@ export const useLogin = () => {
         nombre: contacto.nombreCompleto,
         telefono: contacto.celular,
         esPrincipal: contacto.principal || false,
-      })) || [],
+      })) || []
     );
   };
 
