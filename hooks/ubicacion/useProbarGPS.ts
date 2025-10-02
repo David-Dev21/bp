@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Alert } from 'react-native';
-import { GPSUbicacionService } from '~/services/ubicacion/gpsUbicacionService';
-import { useRegistroStore } from '~/stores/registro/registroStore';
+import { useState } from "react";
+import { Alert } from "react-native";
+import { GPSUbicacionService } from "~/services/ubicacion/gpsUbicacionService";
+import { useRegistroStore } from "~/stores/registro/registroStore";
 
 export const useProbarGPS = () => {
   const [cargando, setCargando] = useState(false);
@@ -24,7 +24,7 @@ export const useProbarGPS = () => {
       const infoGeografica = await GPSUbicacionService.obtenerUbicacionPorCoordenadas(posicion);
 
       if (!infoGeografica.exito || !infoGeografica.datos) {
-        throw new Error(infoGeografica.mensaje || 'Error al obtener información geográfica');
+        throw new Error(infoGeografica.mensaje || "Error al obtener información geográfica");
       }
 
       setDatosUbicacion({
@@ -35,9 +35,9 @@ export const useProbarGPS = () => {
       });
 
       setUbicacionObtenida(true);
-      Alert.alert('Éxito', 'Ubicación obtenida correctamente');
+      Alert.alert("Éxito", "Ubicación obtenida correctamente");
     } catch (error: any) {
-      Alert.alert('Error GPS', error.message || 'Problema al obtener ubicación');
+      Alert.alert("Error GPS", "Problema al obtener ubicación");
     } finally {
       setCargando(false);
     }

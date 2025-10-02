@@ -1,27 +1,39 @@
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import { useRouter } from 'expo-router';
-import VerificarDenuncia from '~/components/inicio/VerificarDenuncia';
-import { useAtenticacionStore } from '~/stores/victimas/atenticacionStore';
-import { useLogin } from '~/hooks/victima/useLogin';
+import React, { useEffect, useState } from "react";
+import { View, ActivityIndicator } from "react-native";
+import { useRouter } from "expo-router";
+import VerificarDenuncia from "~/components/inicio/VerificarDenuncia";
+import { useAtenticacionStore } from "~/stores/victimas/atenticacionStore";
+import { useLogin } from "~/hooks/victima/useLogin";
 
 export default function PaginaLogin() {
   const router = useRouter();
-  const { sesionActiva, idVictima } = useAtenticacionStore();
+  const { sesionActiva } = useAtenticacionStore();
   const { manejarLogin } = useLogin();
+  const [montado, setMontado] = useState(false);
 
-  // Navegación automática cuando hay sesión
   useEffect(() => {
-    if (sesionActiva && idVictima) {
-      // Pequeña demora para que el Root Layout se monte primero
-      const timer = setTimeout(() => {
-        router.push('/alerta');
-      }, 100);
+    setMontado(true);
+  }, []);
 
+  useEffect(() => {
+    if (montado && sesionActiva) {
+      const timer = setTimeout(() => {
+        router.replace("/alerta");
+      }, 100);
       return () => clearTimeout(timer);
     }
-  }, [sesionActiva, idVictima, router]);
+  }, [montado, sesionActiva, router]);
 
+  // Si hay sesión activa, mostrar loading mientras redirige
+  if (sesionActiva) {
+    return (
+      <View className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator size="large" color="#5a6a2f" />
+      </View>
+    );
+  }
+
+  // Si no hay sesión, mostrar formulario de verificación
   return (
     <View className="flex-1 bg-background">
       <VerificarDenuncia verificar={manejarLogin} />

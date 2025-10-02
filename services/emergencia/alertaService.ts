@@ -1,5 +1,5 @@
-import { alertasApi } from '../base/alertasApi';
-import { RespuestaCrearAlerta, RespuestaEstadoAlerta, EstadoAlerta } from '../../lib/tiposApi';
+import { alertasApi } from "../base/alertasApi";
+import { RespuestaCrearAlerta, RespuestaEstadoAlerta, EstadoAlerta } from "../../lib/tiposApi";
 
 // Estados de una alerta
 export type { EstadoAlerta };
@@ -7,7 +7,7 @@ export type { EstadoAlerta };
 export interface AlertaEmergencia {
   idVictima: string;
   fechaHora: string;
-  codigoCud: string;
+  codigoDenuncia: string;
   codigoRegistro: string;
   ubicacion?: {
     longitud: number;
@@ -27,17 +27,17 @@ export class AlertaService {
   // Enviar alerta de emergencia
   static async enviarAlerta(datosAlerta: AlertaEmergencia): Promise<RespuestaCrearAlerta> {
     try {
-      const response = await alertasApi.post('/alertas', datosAlerta);
+      const response = await alertasApi.post("/alertas", datosAlerta);
       return response as RespuestaCrearAlerta;
     } catch (error: any) {
-      let mensaje = 'Error del servidor';
+      let mensaje = "Error del servidor";
 
-      if (error.message?.includes('404')) {
-        mensaje = 'Servicio no encontrado';
-      } else if (error.message?.includes('400')) {
-        mensaje = 'Datos inválidos';
-      } else if (error.message?.includes('ECONNREFUSED')) {
-        mensaje = 'No se puede conectar al servidor';
+      if (error.message?.includes("404")) {
+        mensaje = "Servicio no encontrado";
+      } else if (error.message?.includes("400")) {
+        mensaje = "Datos inválidos";
+      } else if (error.message?.includes("ECONNREFUSED")) {
+        mensaje = "No se puede conectar al servidor";
       }
 
       throw new Error(mensaje);
@@ -50,12 +50,12 @@ export class AlertaService {
       const response = await alertasApi.get(`/alertas/${idAlerta}/estado`);
       return response as RespuestaEstadoAlerta;
     } catch (error: any) {
-      let mensaje = 'Error del servidor';
+      let mensaje = "Error del servidor";
 
-      if (error.message?.includes('404')) {
-        mensaje = 'Alerta no encontrada';
-      } else if (error.message?.includes('ECONNREFUSED')) {
-        mensaje = 'No se puede conectar al servidor';
+      if (error.message?.includes("404")) {
+        mensaje = "Alerta no encontrada";
+      } else if (error.message?.includes("ECONNREFUSED")) {
+        mensaje = "No se puede conectar al servidor";
       }
 
       throw new Error(mensaje);
@@ -73,17 +73,17 @@ export class AlertaService {
       if (response?.exito) {
         return true;
       } else {
-        throw new Error(response?.mensaje || 'Error en cancelación');
+        throw new Error(response?.mensaje || "Error en cancelación");
       }
     } catch (error: any) {
-      let mensaje = 'Error del servidor';
+      let mensaje = "Error del servidor";
 
-      if (error.message?.includes('404')) {
-        mensaje = 'Alerta no encontrada';
-      } else if (error.message?.includes('400')) {
-        mensaje = 'Datos inválidos';
-      } else if (error.message?.includes('ECONNREFUSED')) {
-        mensaje = 'No se puede conectar al servidor';
+      if (error.message?.includes("404")) {
+        mensaje = "Alerta no encontrada";
+      } else if (error.message?.includes("400")) {
+        mensaje = "Datos inválidos";
+      } else if (error.message?.includes("ECONNREFUSED")) {
+        mensaje = "No se puede conectar al servidor";
       }
 
       throw new Error(mensaje);
@@ -93,6 +93,6 @@ export class AlertaService {
   // Formatear fecha como ISO 8601
   static obtenerFechaHoraISO(): string {
     const now = new Date();
-    return now.toISOString().replace('T', ' ').replace('Z', '+00');
+    return now.toISOString().replace("T", " ").replace("Z", "+00");
   }
 }

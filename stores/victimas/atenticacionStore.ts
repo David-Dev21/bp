@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { codigoDenunciaSchema } from '~/lib/zodSchemas';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { codigoDenunciaSchema } from "~/lib/zodSchemas";
 
 // Solo estado global, sin lógica de negocio
 interface EstadoSesion {
@@ -38,15 +38,12 @@ export const useAtenticacionStore = create<EstadoSesion>()(
 
       cerrarSesion: () => {
         set({
-          idVictima: null,
-          apiKey: null,
           sesionActiva: false,
-          codigoDenuncia: null,
         });
       },
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       storage: createJSONStorage(() => AsyncStorage),
       // Persistir solo datos esenciales del usuario
       partialize: (state) => ({
@@ -55,6 +52,6 @@ export const useAtenticacionStore = create<EstadoSesion>()(
         sesionActiva: state.sesionActiva,
         codigoDenuncia: state.codigoDenuncia,
       }),
-    },
-  ),
+    }
+  )
 );

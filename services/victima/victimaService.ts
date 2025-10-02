@@ -69,7 +69,7 @@ export class VictimaService {
   static async actualizarVictima(idVictima: string, profileData: Partial<PerfilVictima>): Promise<RespuestaActualizarVictima> {
     try {
       const { apiKey } = useAtenticacionStore.getState();
-      const response = await alertasApi.patch(`/victimas/${idVictima}`, profileData, {
+      const response = await alertasApi.patch(`/victimas/${idVictima}/perfil`, profileData, {
         headers: {
           "X-API-Key": apiKey,
         },
@@ -96,6 +96,38 @@ export class VictimaService {
       return response;
     } catch (error: any) {
       throw new Error("Error al verificar estado de cuenta");
+    }
+  }
+
+  // Activar cuenta de víctima (actualizar estado, dispositivo y tokens)
+  static async activarCuentaVictima(
+    idVictima: string,
+    datosCuenta: {
+      apiKey: string;
+      idDispositivo: string;
+      fcmToken?: string;
+      estadoCuenta: string;
+    }
+  ): Promise<RespuestaActualizarVictima> {
+    try {
+      const { apiKey } = useAtenticacionStore.getState();
+      const response = await alertasApi.patch(`/victimas/${idVictima}/cuenta`, datosCuenta, {
+        headers: {
+          "X-API-Key": apiKey,
+        },
+      });
+      return response;
+    } catch (error: any) {
+      // Solo usar el mensaje de error que viene del servidor
+      const datosError = error.response?.data?.datos || error.response?.data;
+      if (datosError?.error) {
+        throw new Error(datosError.error);
+      }
+      if (datosError?.mensaje) {
+        throw new Error(datosError.mensaje);
+      }
+      // Si no hay mensaje específico del servidor, usar genérico
+      throw new Error("Error del servidor");
     }
   }
 }

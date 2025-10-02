@@ -29,10 +29,10 @@ export interface DatosUbicacionGeografica {
 }
 
 // Estados de alerta
-export type EstadoAlerta = 'PENDIENTE' | 'ASIGNADA' | 'EN_ATENCION' | 'RESUELTA' | 'CANCELADA' | 'FALSA_ALERTA';
+export type EstadoAlerta = "PENDIENTE" | "ASIGNADA" | "EN_ATENCION" | "RESUELTA" | "CANCELADA" | "FALSA_ALERTA";
 
 // Estados de cuenta
-export type EstadoCuenta = 'ACTIVA' | 'INACTIVA' | 'SUSPENDIDA' | 'PENDIENTE_VERIFICACION';
+export type EstadoCuenta = "ACTIVA" | "INACTIVA" | "SUSPENDIDA" | "PENDIENTE_VERIFICACION";
 
 // Interfaces para víctimas
 export interface ContactoEmergencia {
@@ -80,7 +80,7 @@ export interface RespuestaCrearVictima extends RespuestaBase<{ victima: { id: st
 
 export interface RespuestaActualizarVictima extends RespuestaBase<{ victima: { id: string } }> {}
 
-export interface RespuestaObtenerPerfil extends RespuestaBase<PerfilVictima> {}
+export interface RespuestaObtenerPerfil extends RespuestaBase<{ victima: PerfilVictima }> {}
 
 export interface RespuestaCrearAlerta extends RespuestaBase<{ alerta: { id: string; estadoAlerta: EstadoAlerta } }> {}
 

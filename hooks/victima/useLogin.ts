@@ -30,29 +30,31 @@ export const useLogin = () => {
   };
 
   const manejarUsuarioValidado = async (idVictima: string) => {
-    const perfil = await VictimaService.obtenerPerfilPorIdVictima(idVictima);
-    if (perfil.exito && perfil.datos) {
-      setUsuario(perfil.datos.id!, perfil.datos.apiKey!);
+    // Verificar si ya tenemos la apiKey en el store (persisted)
+    const { apiKey } = useAtenticacionStore.getState();
+    if (apiKey) {
+      setUsuario(idVictima, apiKey);
       router.push("/alerta");
     } else {
-      Alert.alert("Error", "No se pudo cargar tu información");
+      // Si no hay apiKey guardada, redirigir a verificar código
+      router.push("/verificar-codigo" as any);
     }
   };
 
   const manejarUsuarioPendiente = async (idVictima: string) => {
     const perfil = await VictimaService.obtenerPerfilPorIdVictima(idVictima);
-    if (perfil.exito && perfil.datos) {
-      cargarDatosPerfil(perfil.datos);
-      router.push("/solicitar-codigo" as any);
+    if (perfil.exito && perfil.datos?.victima) {
+      cargarDatosPerfil(perfil.datos.victima);
+      router.push("/verificar-codigo" as any);
     } else {
       Alert.alert("Error", "No se pudo cargar tu información");
     }
   };
 
-  const manejarUsuarioNuevo = (cedulaIdentidad: string) => {
+  const manejarUsuarioNuevo = (cedulaIdentidad: string, codigoDenuncia: string) => {
     router.push({
       pathname: "/registro",
-      params: { cedulaIdentidad },
+      params: { cedulaIdentidad, codigoDenuncia },
     });
   };
 
@@ -67,7 +69,7 @@ export const useLogin = () => {
       // Paso 2: Verificar si usuario existe
       const datosUsuario = await verificarUsuarioExistente(data.cedulaIdentidad);
       if (!datosUsuario) {
-        manejarUsuarioNuevo(data.cedulaIdentidad);
+        manejarUsuarioNuevo(data.cedulaIdentidad, data.codigoDenuncia);
         return;
       }
 

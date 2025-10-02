@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 export interface DatosPersonales {
   cedulaIdentidad: string;
@@ -65,33 +65,33 @@ interface EstadoRegistro {
 }
 
 const estadoInicialDatosPersonales: DatosPersonales = {
-  cedulaIdentidad: '',
-  nombres: 'Vanessa',
-  apellidos: 'Pérez García',
-  fechaNacimiento: '',
-  celular: '79550230',
-  correo: 'juan.perez@email.com',
+  cedulaIdentidad: "",
+  nombres: "Vanessa",
+  apellidos: "Pérez García",
+  fechaNacimiento: "",
+  celular: "79550230",
+  correo: "juan.perez@email.com",
   fechaRegistro: new Date().toISOString(),
 };
 
 const estadoInicialDatosUbicacion: DatosUbicacion = {
-  idMunicipio: '',
-  municipio: '',
-  provincia: '',
-  departamento: '',
+  idMunicipio: "",
+  municipio: "",
+  provincia: "",
+  departamento: "",
   direccion: {
-    zona: 'Villa Fátima',
-    calle: 'Calle 21 de Calacoto',
-    numero: '1234',
-    referencia: 'Cerca del mercado central',
+    zona: "Villa Fátima",
+    calle: "Calle 21 de Calacoto",
+    numero: "1234",
+    referencia: "Cerca del mercado central",
   },
 };
 
 const estadoInicialContactosEmergencia: ContactoEmergencia[] = [
   {
-    parentesco: 'Madre',
-    nombre: 'María González Pérez',
-    telefono: '70123456',
+    parentesco: "Madre",
+    nombre: "María González Pérez",
+    telefono: "70123456",
     esPrincipal: true,
   },
 ];
