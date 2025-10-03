@@ -5,7 +5,6 @@ import { THEME_COLORS } from "~/lib/theme";
 import { useColorScheme } from "nativewind";
 import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
   const { colorScheme } = useColorScheme();
@@ -16,7 +15,7 @@ export default function TabsLayout() {
   );
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: tema.background }}>
+    <>
       <StatusBar style={colorScheme === "dark" ? "dark" : "light"} backgroundColor={tema.primary} />
       <Tabs
         screenOptions={{
@@ -39,10 +38,10 @@ export default function TabsLayout() {
         }}
       >
         <Tabs.Screen
-          name="ajustes"
+          name="mapa"
           options={{
-            title: "Ajustes",
-            tabBarLabel: ({ focused }) => <TabLabel focused={focused} titulo="Ajustes" />,
+            title: "Mapa",
+            tabBarLabel: ({ focused }) => <TabLabel focused={focused} titulo="Mapa" />,
             tabBarIcon: ({ color, size, focused }) => (
               <View
                 style={{
@@ -102,6 +101,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
-    </SafeAreaView>
+    </>
   );
 }

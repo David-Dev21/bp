@@ -3,7 +3,6 @@ import { View, ScrollView, Alert, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
-import { Badge } from "~/components/ui/badge";
 import { useAtenticacionStore } from "~/stores/victimas/atenticacionStore";
 import { Ionicons } from "@expo/vector-icons";
 import { formateadorFecha } from "~/lib/formato/formateadorFecha";
@@ -63,12 +62,12 @@ export default function PantallaPerfil() {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refrescarDatos} colors={[tema.primary]} />}
       >
         {/* Header del perfil - más compacto */}
-        <View className="flex-row items-center px-4 py-2  bg-card/50">
-          <View className="w-16 h-16 bg-primary/20 rounded-full items-center justify-center">
-            <Ionicons name="person" size={32} color={tema.primary} />
+        <View className="flex-row items-center px-4 py-2 bg-card/50">
+          <View className="w-10 h-10 bg-primary/20 rounded-full items-center justify-center">
+            <Ionicons name="person" size={24} color={tema.primary} />
           </View>
           <View>
-            <Text className="ml-2 text-xl font-bold text-foreground">
+            <Text className="ml-2 text-xl px-4 font-bold text-foreground">
               {datosPersonales.nombres && datosPersonales.apellidos ? `${datosPersonales.nombres} ${datosPersonales.apellidos}` : "Mi Perfil"}
             </Text>
           </View>
@@ -89,12 +88,7 @@ export default function PantallaPerfil() {
             <>
               {/* Información Personal - optimizada */}
               <View className="mb-2">
-                <View className="flex-row items-center ">
-                  <Ionicons name="information-circle" size={20} color={tema.primary} />
-                  <Text className="text-lg font-bold text-foreground ml-2">Información Personal</Text>
-                </View>
-
-                <View className="flex-row mb-1">
+                <View className="flex-row">
                   <CampoPerfilCompacto icono="card-outline" etiqueta="Cédula" valor={datosPersonales.cedulaIdentidad || "No especificado"} />
                   <CampoPerfilCompacto icono="call-outline" etiqueta="Celular" valor={datosPersonales.celular || "No especificado"} />
                 </View>

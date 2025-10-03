@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { alertaService, type EstadoAlerta } from '~/services/emergencia/alertaService';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AlertaService, type EstadoAlerta } from "~/services/emergencia/alertaService";
 
 interface AlertaEstado {
   idAlerta: string | null;
@@ -44,31 +44,36 @@ export const useAlertaStore = create<AlertaEstado>()(
       verificarEstadoAlerta: async () => {
         const { idAlerta } = get();
         if (!idAlerta) {
-          return { success: false, error: 'No hay alerta activa' };
+          return { success: false, error: "No hay alerta activa" };
         }
 
         try {
-          const respuesta = await alertaService.consultarEstadoAlerta(idAlerta);
-          const estadoActual = respuesta.datos.estadoAlerta;
+          const respuesta = await AlertaService.consultarEstadoAlerta(idAlerta);
+
+          if (!respuesta.datos) {
+            return { success: false, error: "No se recibieron datos del servidor" };
+          }
+
+          const estadoActual = respuesta.datos.estadoAlerta as EstadoAlerta;
 
           // Actualizar el estado en el store
           set({ estado: estadoActual });
 
           // Verificar si el estado es final (alerta terminada)
-          const estadosFinales: EstadoAlerta[] = ['RESUELTA', 'CANCELADA', 'FALSA_ALERTA'];
+          const estadosFinales: EstadoAlerta[] = ["RESUELTA", "CANCELADA", "FALSA_ALERTA"];
           if (estadosFinales.includes(estadoActual)) {
             return { success: true, estadoFinalizado: estadoActual };
           }
 
           return { success: true };
         } catch (error) {
-          return { success: false, error: 'Error al consultar el estado de la alerta' };
+          return { success: false, error: "Error al consultar el estado de la alerta" };
         }
       },
     }),
     {
-      name: 'alerta-store-nueva-logica',
+      name: "alerta-store",
       storage: createJSONStorage(() => AsyncStorage),
-    },
-  ),
+    }
+  )
 );

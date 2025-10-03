@@ -10,6 +10,8 @@ import { PortalHost } from "@rn-primitives/portal";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { obtenerIdDispositivo } from "~/lib/utils";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ScreenCapture from "expo-screen-capture";
+import { VistaProtegida } from "~/components/seguridad/VistaProtegida";
 import "~/global.css";
 
 const LIGHT_THEME: Theme = {
@@ -38,105 +40,113 @@ export default function RootLayout() {
   // Inicializar ID del dispositivo al abrir la app
   React.useEffect(() => {
     obtenerIdDispositivo().catch(console.error);
-    // Mostrar contenido de AsyncStorage en consola
-    AsyncStorage.getAllKeys()
-      .then((keys) => {
-        AsyncStorage.multiGet(keys)
-          .then((stores) => {
-            console.log("AsyncStorage contents:", stores);
-          })
-          .catch((error) => console.error("Error getting AsyncStorage:", error));
-      })
-      .catch((error) => console.error("Error getting keys:", error));
+
+    // Proteger contra capturas de pantalla
+    const activarProteccionPantalla = async () => {
+      try {
+        await ScreenCapture.preventScreenCaptureAsync();
+      } catch (error) {
+        console.error("Error activando protección:", error);
+      }
+    };
+
+    activarProteccionPantalla();
+
+    // Limpiar al desmontar
+    return () => {
+      ScreenCapture.allowScreenCaptureAsync();
+    };
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
-        <SafeAreaView edges={["bottom", "left", "right"]} style={{ flex: 1 }}>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen
-              name="(tabs)"
-              options={{
-                headerShown: true,
-                headerTitle: "",
-                headerStyle: { backgroundColor: tema.primary },
-                headerTintColor: tema["primary-foreground"],
-                headerLeft: () => (
-                  <Link asChild href={"/perfil"}>
-                    <Pressable>
-                      <Ionicons name="person-circle-outline" size={32} color={tema["primary-foreground"]} />
-                    </Pressable>
-                  </Link>
-                ),
-                headerRight: () => (
-                  <Pressable
-                    style={({ pressed }) => ({
-                      opacity: pressed ? 0.7 : 1,
-                    })}
-                  >
-                    <Ionicons name="information-circle-outline" size={32} color={tema["primary-foreground"]} />
-                  </Pressable>
-                ),
-              }}
-            />
-            <Stack.Screen
-              name="registro"
-              options={{
-                headerStyle: { backgroundColor: tema.primary },
-                headerTintColor: tema["primary-foreground"],
-                headerShown: true,
-                title: "",
-                headerBackTitle: "Volver",
-              }}
-            />
-            <Stack.Screen
-              name="informacion"
-              options={{
-                headerStyle: { backgroundColor: tema.primary },
-                headerTintColor: tema["primary-foreground"],
-                headerShown: true,
-                title: "Información",
-                headerBackTitle: "Volver",
-              }}
-            />
-            <Stack.Screen
-              name="perfil"
-              options={{
-                headerStyle: { backgroundColor: tema.primary },
-                headerTintColor: tema["primary-foreground"],
-                headerShown: true,
-                title: "PERFIL",
-                headerBackTitle: "Volver",
-                headerRight: () => (
-                  <Link asChild href={"/registro?modo=editar"}>
+    <VistaProtegida>
+      <SafeAreaProvider>
+        <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
+          <SafeAreaView edges={["bottom", "left", "right"]} style={{ flex: 1 }}>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen
+                name="(tabs)"
+                options={{
+                  headerShown: true,
+                  headerTitle: "",
+                  headerStyle: { backgroundColor: tema.primary },
+                  headerTintColor: tema["primary-foreground"],
+                  headerLeft: () => (
+                    <Link asChild href={"/perfil"}>
+                      <Pressable>
+                        <Ionicons name="person-circle-outline" size={32} color={tema["primary-foreground"]} />
+                      </Pressable>
+                    </Link>
+                  ),
+                  headerRight: () => (
                     <Pressable
                       style={({ pressed }) => ({
                         opacity: pressed ? 0.7 : 1,
                       })}
                     >
-                      <Ionicons name="create" size={24} color={tema["primary-foreground"]} />
+                      <Ionicons name="information-circle-outline" size={32} color={tema["primary-foreground"]} />
                     </Pressable>
-                  </Link>
-                ),
-              }}
-            />
-            <Stack.Screen
-              name="verificar-codigo"
-              options={{
-                headerStyle: { backgroundColor: tema.primary },
-                headerTintColor: tema["primary-foreground"],
-                headerShown: false,
-                title: "Solicitar Código",
-                headerBackTitle: "Volver",
-              }}
-            />
-          </Stack>
-        </SafeAreaView>
-        <PortalHost />
-      </ThemeProvider>
-    </SafeAreaProvider>
+                  ),
+                }}
+              />
+              <Stack.Screen
+                name="registro"
+                options={{
+                  headerStyle: { backgroundColor: tema.primary },
+                  headerTintColor: tema["primary-foreground"],
+                  headerShown: true,
+                  title: "",
+                  headerBackTitle: "Volver",
+                }}
+              />
+              <Stack.Screen
+                name="informacion"
+                options={{
+                  headerStyle: { backgroundColor: tema.primary },
+                  headerTintColor: tema["primary-foreground"],
+                  headerShown: true,
+                  title: "Información",
+                  headerBackTitle: "Volver",
+                }}
+              />
+              <Stack.Screen
+                name="perfil"
+                options={{
+                  headerStyle: { backgroundColor: tema.primary },
+                  headerTintColor: tema["primary-foreground"],
+                  headerShown: true,
+                  title: "PERFIL",
+                  headerBackTitle: "Volver",
+                  headerRight: () => (
+                    <Link asChild href={"/registro?modo=editar"}>
+                      <Pressable
+                        style={({ pressed }) => ({
+                          opacity: pressed ? 0.7 : 1,
+                        })}
+                      >
+                        <Ionicons name="create" size={24} color={tema["primary-foreground"]} />
+                      </Pressable>
+                    </Link>
+                  ),
+                }}
+              />
+              <Stack.Screen
+                name="verificar-codigo"
+                options={{
+                  headerStyle: { backgroundColor: tema.primary },
+                  headerTintColor: tema["primary-foreground"],
+                  headerShown: false,
+                  title: "Solicitar Código",
+                  headerBackTitle: "Volver",
+                }}
+              />
+            </Stack>
+          </SafeAreaView>
+          <PortalHost />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </VistaProtegida>
   );
 }
 const useIsomorphicLayoutEffect = Platform.OS === "web" && typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;

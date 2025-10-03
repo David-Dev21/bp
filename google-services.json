@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:403229043292:android:3ea1466e6c71797b541499",
+        "mobilesdk_app_id": "1:403229043292:android:3170d174fd4f0063541499",
         "android_client_info": {
-          "package_name": "com.rubendavid.botonpanico"
+          "package_name": "com.felcv.botonpanico"
         }
       },
       "oauth_client": [],
