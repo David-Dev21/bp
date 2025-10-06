@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import * as Location from 'expo-location';
-import { useAlertaStore } from '~/stores/emergencia/alertaStore';
-import { UbicacionService } from '~/services/emergencia/ubicacionService';
+import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner-native";
+import { useAlertaStore } from "~/stores/alertaStore";
+import { UbicacionService } from "~/services/ubicacionService";
+import { useUbicacionDispositivo } from "~/hooks/ubicacion/useUbicacionDispositivo";
 
 interface EstadoActualizacion {
   compartiendoUbicacion: boolean;
@@ -10,6 +11,7 @@ interface EstadoActualizacion {
 
 export function useActualizacionUbicacion() {
   const { idAlerta, estado } = useAlertaStore();
+  const { obtenerUbicacionActual } = useUbicacionDispositivo();
 
   const [estadoLocal, setEstadoLocal] = useState<EstadoActualizacion>({
     compartiendoUbicacion: false,
@@ -22,7 +24,6 @@ export function useActualizacionUbicacion() {
   const enviarUbicacionActual = async () => {
     // Verificar si debe enviar usando la referencia
     if (!debeEnviarRef.current) {
-      console.log('🚫 No enviar: Compartición detenida');
       return;
     }
 
@@ -30,26 +31,21 @@ export function useActualizacionUbicacion() {
     const estadoActual = useAlertaStore.getState();
 
     if (!estadoActual.idAlerta) {
-      console.log('❌ No hay idAlerta para enviar ubicación');
       return;
     }
 
     // Verificar estado actual antes de enviar
-    if (estadoActual.estado === 'EN_ATENCION') {
-      console.log('🚫 No enviar: La alerta está EN_ATENCION');
+    if (estadoActual.estado === "EN_ATENCION") {
       return;
     }
 
     try {
-      // Obtener permisos de ubicación
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setEstadoLocal((prev) => ({ ...prev, error: 'Permisos de ubicación denegados' }));
+      // Obtener ubicación actual
+      const ubicacion = await obtenerUbicacionActual();
+      if (!ubicacion) {
+        setEstadoLocal((prev) => ({ ...prev, error: "No se pudo obtener ubicación" }));
         return;
       }
-
-      // Obtener ubicación actual
-      const ubicacion = await Location.getCurrentPositionAsync();
 
       // Formatear datos para el servicio
       const datosUbicacion = {
@@ -61,23 +57,23 @@ export function useActualizacionUbicacion() {
       };
 
       // Enviar al servidor
-      await UbicacionService.enviarUbicacion(datosUbicacion);
-      console.log('✅ Ubicación enviada correctamente');
+      const resultado = await UbicacionService.enviarUbicacion(datosUbicacion);
 
-      setEstadoLocal((prev) => ({ ...prev, error: null }));
+      if (!resultado.exito) {
+        const mensajeError = resultado.error ? `${resultado.mensaje} - ${resultado.error}` : resultado.mensaje;
+        setEstadoLocal((prev) => ({ ...prev, error: mensajeError }));
+      } else {
+        setEstadoLocal((prev) => ({ ...prev, error: null }));
+      }
     } catch (error) {
-      console.error('❌ Error enviando ubicación:', error);
-      setEstadoLocal((prev) => ({
-        ...prev,
-        error: error instanceof Error ? error.message : 'Error desconocido',
-      }));
+      const mensajeError = error instanceof Error ? error.message : "Error al enviar ubicación";
+      setEstadoLocal((prev) => ({ ...prev, error: mensajeError }));
     }
   };
 
   const iniciarCompartirUbicacion = () => {
     if (!idAlerta) return;
 
-    console.log('🟢 Iniciando compartición de ubicación cada 30 segundos');
     debeEnviarRef.current = true;
     setEstadoLocal((prev) => ({ ...prev, compartiendoUbicacion: true }));
 
@@ -91,8 +87,6 @@ export function useActualizacionUbicacion() {
   };
 
   const detenerCompartirUbicacion = () => {
-    console.log('🔴 Deteniendo compartición de ubicación');
-
     // PRIMERO: Deshabilitar el envío
     debeEnviarRef.current = false;
 
@@ -108,9 +102,7 @@ export function useActualizacionUbicacion() {
   // Effect para manejar el estado de la alerta
   useEffect(() => {
     // Solo compartir ubicación si hay alerta activa y NO está en atención
-    const debeCompartir = idAlerta && estado !== 'EN_ATENCION';
-
-    console.log(`📍 Estado alerta: ${estado}, idAlerta: ${idAlerta}, debe compartir: ${debeCompartir}`);
+    const debeCompartir = idAlerta && estado !== "EN_ATENCION";
 
     if (debeCompartir) {
       // Solo iniciar si no está ya compartiendo
@@ -119,11 +111,6 @@ export function useActualizacionUbicacion() {
       }
     } else {
       detenerCompartirUbicacion();
-
-      // Log específico para EN_ATENCION
-      if (estado === 'EN_ATENCION') {
-        console.log('🚫 Ubicación detenida: La alerta está EN_ATENCION');
-      }
     }
 
     // Cleanup al desmontar

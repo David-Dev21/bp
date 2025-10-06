@@ -2,9 +2,18 @@ import React from "react";
 import { View, Pressable, Linking } from "react-native";
 import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 import { useBotonPanico } from "~/hooks/emergencia/useBotonPanico";
-import { useAlertaStore } from "~/stores/emergencia/alertaStore";
-import { useAtenticacionStore } from "~/stores/victimas/atenticacionStore";
+import { useAlertaStore } from "~/stores/alertaStore";
+import { useAtenticacionStore } from "~/stores/atenticacionStore";
 import { ContenidoBotonEmergencia } from "~/components/emergencia/ContenidoBotonEmergencia";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
@@ -21,9 +30,11 @@ export default function BotonPanico() {
     estadoBoton,
     botonDeshabilitado,
     enviandoAlerta,
+    dialogoEstadoAlerta,
     manejarToque,
     manejarPressIn,
     manejarPressOut,
+    cerrarDialogoYLimpiar,
     obtenerTextoEstado,
     obtenerEstilosBoton,
   } = useBotonPanico();
@@ -91,20 +102,35 @@ export default function BotonPanico() {
         <Text className="text-center text-foreground/70 py-4 text-sm">{obtenerTextoEstado()}</Text>
 
         {/* Llamadas de emergencia */}
-        <View className="px-6 mt-6">
-          <Text className="text-center text-sm text-muted-foreground mb-3">Llamadas de emergencia</Text>
-          <View className="flex-row justify-around gap-3">
-            <Button onPress={() => realizarLlamada("80014348")} variant="default" className="flex-1 flex-row items-center justify-center">
-              <Ionicons name="call" size={18} color={colorIcono} />
-              <Text className="ml-2 font-medium">FELCV: 800 14 0348</Text>
+        <View className="mt-6">
+          <Text className="text-center text-sm text-muted-foreground mb-3">
+            Llamadas de emergencia
+            <Ionicons className="call" size={4} color={colorIcono} />
+          </Text>
+          <View className="flex-row justify-between gap-2">
+            <Button onPress={() => realizarLlamada("80014348")} variant="default">
+              <Text className="font-medium">FELCV: 800 14 0348</Text>
             </Button>
-            <Button onPress={() => realizarLlamada("110")} variant="default" className="flex-1 flex-row items-center justify-center">
-              <Ionicons name="call" size={18} color={colorIcono} />
-              <Text className="ml-2 font-medium">Policía: 110</Text>
+            <Button onPress={() => realizarLlamada("110")} variant="default">
+              <Text className="font-medium">RADIO PATRULLA: 110</Text>
             </Button>
           </View>
         </View>
       </View>
+
+      <AlertDialog open={dialogoEstadoAlerta.mostrar}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dialogoEstadoAlerta.titulo}</AlertDialogTitle>
+            <AlertDialogDescription>{dialogoEstadoAlerta.descripcion}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onPress={cerrarDialogoYLimpiar}>
+              <Text>OK</Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </View>
   );
 }

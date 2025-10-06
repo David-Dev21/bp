@@ -1,17 +1,17 @@
 import { useState, useRef } from "react";
-import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CodigoService } from "~/services/codigos/codigoService";
-import { VictimaService } from "~/services/victima/victimaService";
-import { useAtenticacionStore } from "~/stores/victimas/atenticacionStore";
-import { useRegistroStore } from "~/stores/registro/registroStore";
+import { toast } from "sonner-native";
+import { CodigoService } from "~/services/codigoService";
+import { VictimaService } from "~/services/victimaService";
+import { useAtenticacionStore } from "~/stores/atenticacionStore";
+import { usePerfilStore } from "~/stores/perfilStore";
 import { obtenerExpoPushToken } from "~/lib/utils";
 
 export function useVerificacionCodigo() {
   const router = useRouter();
   const { setUsuario } = useAtenticacionStore();
-  const { obtenerDatosCompletos } = useRegistroStore();
+  const { obtenerDatosCompletos } = usePerfilStore();
 
   const [codigo, setCodigo] = useState("");
   const [codigoEnviado, setCodigoEnviado] = useState(false);
@@ -25,7 +25,7 @@ export function useVerificacionCodigo() {
 
   const solicitarCodigo = async () => {
     if (!celular) {
-      Alert.alert("Error", "No se encontró el número de celular");
+      toast.error("No se encontró el número de celular");
       return;
     }
 
@@ -34,12 +34,14 @@ export function useVerificacionCodigo() {
       const result = await CodigoService.solicitarCodigo(celular);
       if (result.exito) {
         setCodigoEnviado(true);
-        Alert.alert("Código enviado", result.mensaje || "Revisa tu WhatsApp para el código de verificación");
+        const mensajeExito = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
+        toast.success(mensajeExito);
       } else {
-        Alert.alert("Error", result.mensaje || "No se pudo enviar el código");
+        const mensajeError = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
+        toast.error(mensajeError);
       }
     } catch (error) {
-      Alert.alert("Error", error instanceof Error ? error.message : "Error al solicitar código");
+      toast.error(error instanceof Error ? error.message : "Error al solicitar código");
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +49,7 @@ export function useVerificacionCodigo() {
 
   const verificarCodigo = async () => {
     if (!celular || codigo.length !== 6) {
-      Alert.alert("Error", "Ingresa el código completo de 6 dígitos");
+      toast.error("Ingresa el código completo de 6 dígitos");
       return;
     }
 
@@ -64,35 +66,32 @@ export function useVerificacionCodigo() {
         const idVictima = useAtenticacionStore.getState().idVictima;
 
         if (!storedId || !idVictima) {
-          Alert.alert("Error", "No se pudo obtener la información del dispositivo. Intenta nuevamente.");
+          toast.error("No se pudo obtener la información del dispositivo. Intenta nuevamente.");
           return;
         }
 
         try {
-          await VictimaService.activarCuentaVictima(idVictima, {
-            apiKey: result.datos.victima.apiKey,
+          await VictimaService.actualizarCuenta(idVictima, {
             idDispositivo: storedId,
-            fcmToken: fcmToken || undefined,
-            estadoCuenta: "ACTIVA",
+            fcmToken: fcmToken || "",
           });
         } catch (updateError) {
-          Alert.alert("Error", "No se pudo activar tu cuenta. Verifica tu conexión e intenta nuevamente.");
+          toast.error("No se pudo activar tu cuenta. Verifica tu conexión e intenta nuevamente.");
           return;
         }
 
-        Alert.alert("¡Verificación exitosa!", result.mensaje || "Tu cuenta ha sido verificada correctamente.", [
-          {
-            text: "OK",
-            onPress: () => {
-              router.replace("/alerta");
-            },
-          },
-        ]);
+        const mensajeExito = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
+        toast.success(mensajeExito);
+        // Navegar después de un pequeño delay para que se vea el toast
+        setTimeout(() => {
+          router.replace("/alerta");
+        }, 500);
       } else {
-        Alert.alert("Error", result.mensaje || "Código incorrecto");
+        const mensajeError = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
+        toast.error(mensajeError);
       }
     } catch (error) {
-      Alert.alert("Error", error instanceof Error ? error.message : "Error al verificar código");
+      toast.error(error instanceof Error ? error.message : "Error al verificar código");
     } finally {
       setIsLoading(false);
     }

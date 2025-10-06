@@ -1,26 +1,19 @@
 import { useState, useCallback } from "react";
-import { Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { VictimaService } from "~/services/victima/victimaService";
+import { toast } from "sonner-native";
+import { VictimaService } from "~/services/victimaService";
 import { PerfilVictima } from "~/lib/tiposApi";
-import { useRegistroStore } from "~/stores/registro/registroStore";
+import { usePerfilStore } from "~/stores/perfilStore";
 
-interface DatosRegistro {
-  cedulaIdentidad: string;
-  codigoDenuncia: string;
-  esEdicion?: boolean;
-  idVictima?: string;
-}
-
-export function useRegistro(registroDatos?: DatosRegistro) {
+export function useRegistro() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { limpiarDatos } = useRegistroStore();
+  const { limpiarDatos, datosPersonales } = usePerfilStore();
 
   const handleRegistro = useCallback(
     async (datos: Partial<PerfilVictima>) => {
-      if (!registroDatos?.cedulaIdentidad || !registroDatos?.codigoDenuncia) {
-        Alert.alert("Error", "Datos incompletos.");
+      if (!datosPersonales.cedulaIdentidad || !datosPersonales.codigoDenuncia) {
+        toast.error("Datos incompletos.");
         return;
       }
       setIsLoading(true);
@@ -28,70 +21,31 @@ export function useRegistro(registroDatos?: DatosRegistro) {
         const result = await VictimaService.registrarVictima(datos as PerfilVictima);
 
         if (result.exito && result.datos?.victima.id) {
-          // No guardar en store aquí, se hace después de verificar código
-          Alert.alert("¡Éxito!", "Registro completado correctamente. Ahora verifica tu código.", [
-            {
-              text: "OK",
-              onPress: () => {
-                limpiarDatos();
-                router.push("/verificar-codigo" as any);
-              },
-            },
-          ]);
+          const mensajeExito = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
+          toast.success(mensajeExito);
+          limpiarDatos();
+          // Navegar después de un pequeño delay
+          setTimeout(() => {
+            router.push("/verificar-codigo" as any);
+          }, 500);
           return result;
         } else {
-          Alert.alert("Error", result.mensaje || "No se pudo registrar.");
+          const mensajeError = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
+          toast.error(mensajeError);
           return result;
         }
       } catch (error) {
         const mensajeError = error instanceof Error ? error.message : "Algo salió mal.";
-        return { exito: false, mensaje: mensajeError, codigo: 500 }; // Mantener consistencia con RespuestaBase
+        return { exito: false, mensaje: mensajeError, codigo: 500 };
       } finally {
         setIsLoading(false);
       }
     },
-    [registroDatos, router]
-  );
-
-  const handleActualizacion = useCallback(
-    async (datos: Partial<PerfilVictima>) => {
-      if (!registroDatos?.idVictima) {
-        Alert.alert("Error", "Usuario no identificado.");
-        return { exito: false, mensaje: "Usuario no identificado", codigo: 400 }; // Mantener consistencia con RespuestaBase
-      }
-
-      setIsLoading(true);
-
-      try {
-        const result = await VictimaService.actualizarVictima(registroDatos.idVictima, datos);
-
-        if (result.exito) {
-          Alert.alert("¡Éxito!", "Perfil actualizado correctamente.", [
-            {
-              text: "OK",
-              onPress: () => {
-                router.push("/perfil");
-              },
-            },
-          ]);
-          return result;
-        } else {
-          Alert.alert("Error", "No se pudo actualizar.");
-          return result; // Devolver directamente la respuesta de la API
-        }
-      } catch (error) {
-        const mensajeError = error instanceof Error ? error.message : "Algo salió mal.";
-        return { exito: false, mensaje: mensajeError, codigo: 500 }; // Mantener consistencia con RespuestaBase
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [registroDatos, router]
+    [datosPersonales, router]
   );
 
   return {
     isLoading,
     handleRegistro,
-    handleActualizacion,
   };
 }

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AlertaService, type EstadoAlerta } from "~/services/emergencia/alertaService";
+import { AlertaService, type EstadoAlerta } from "~/services/alertaService";
 
 interface AlertaEstado {
   idAlerta: string | null;

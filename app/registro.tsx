@@ -1,74 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { useRegistro } from '~/hooks/victima/useRegistro';
-import { useRegistroStore } from '~/stores/registro/registroStore';
-import { useAtenticacionStore } from '~/stores/victimas/atenticacionStore';
-import DatosPersonales from '~/components/registro/DatosPersonales';
-import DatosUbicacion from '~/components/registro/DatosUbicacion';
-import DatosContactoEmergencia from '~/components/registro/DatosContactoEmergencia';
+import React, { useState, useEffect } from "react";
+import { View } from "react-native";
+import { useRegistro } from "~/hooks/victima/useRegistro";
+import { usePerfilStore } from "~/stores/perfilStore";
+import DatosPersonales from "~/components/registro/DatosPersonales";
+import DatosUbicacion from "~/components/registro/DatosUbicacion";
+import DatosContactoEmergencia from "~/components/registro/DatosContactoEmergencia";
 
 export default function PantallaRegistro() {
-  const { cedulaIdentidad, codigoDenuncia, modo } = useLocalSearchParams<{
-    cedulaIdentidad: string;
-    codigoDenuncia: string;
-    modo: string;
-  }>();
-
-  const esEdicion = modo === 'editar';
-
-  // Obtener idVictima del store de autenticación
-  const { idVictima } = useAtenticacionStore();
-
-  const { isLoading, handleRegistro, handleActualizacion } = useRegistro({
-    cedulaIdentidad: cedulaIdentidad || '',
-    codigoDenuncia: codigoDenuncia || '',
-    esEdicion,
-    idVictima: idVictima || '',
-  });
+  // Hook para registro
+  const { isLoading, handleRegistro } = useRegistro();
 
   // Store global del registro
-  const { validacionPasos, obtenerDatosCompletos, limpiarDatos } = useRegistroStore();
+  const { obtenerDatosCompletos } = usePerfilStore();
 
   // Estado del wizard
   const [pasoActual, setPasoActual] = useState(1);
   const totalPasos = 3;
 
-  // Limpiar datos al montar el componente (solo en modo registro)
-  useEffect(() => {
-    if (!esEdicion) {
-      limpiarDatos();
-    }
-  }, [esEdicion]);
-
-  // Manejo de validaciones (ahora usan el store)
-  const esPasoValido = () => {
-    switch (pasoActual) {
-      case 1:
-        return validacionPasos.paso1;
-      case 2:
-        return validacionPasos.paso2;
-      case 3:
-        return validacionPasos.paso3;
-      default:
-        return false;
-    }
-  };
-
   // Navegación simplificada
-  const handleNavigate = (action: 'prev' | 'next' | 'complete') => {
+  const handleNavigate = (action: "prev" | "next" | "complete") => {
     switch (action) {
-      case 'prev':
+      case "prev":
         if (pasoActual > 1) {
           setPasoActual(pasoActual - 1);
         }
         break;
-      case 'next':
-        if (esPasoValido() && pasoActual < totalPasos) {
+      case "next":
+        if (pasoActual < totalPasos) {
           setPasoActual(pasoActual + 1);
         }
         break;
-      case 'complete':
+      case "complete":
         completarRegistro();
         break;
     }
@@ -80,12 +42,12 @@ export default function PantallaRegistro() {
       const { datosPersonales, datosUbicacion, contactosEmergencia } = obtenerDatosCompletos();
 
       const datosCompletos = {
-        cedulaIdentidad: esEdicion ? datosPersonales.cedulaIdentidad : cedulaIdentidad || '',
+        cedulaIdentidad: datosPersonales.cedulaIdentidad,
         nombres: datosPersonales.nombres,
         apellidos: datosPersonales.apellidos,
         fechaNacimiento: datosPersonales.fechaNacimiento,
         celular: datosPersonales.celular,
-        correo: datosPersonales.correo,
+        correo: datosPersonales.correo?.trim() || undefined,
         idMunicipio: Number(datosUbicacion.idMunicipio),
         direccion: datosUbicacion.direccion,
         contactosEmergencia: contactosEmergencia.map((contacto) => ({
@@ -96,45 +58,24 @@ export default function PantallaRegistro() {
         })),
       };
 
-      let result;
-      if (esEdicion) {
-        result = await handleActualizacion(datosCompletos);
-      } else {
-        result = await handleRegistro(datosCompletos);
-      }
-
+      await handleRegistro(datosCompletos);
       // Todas las alertas y navegación se manejan en los hooks
     } catch (error) {
-      console.error(`Error en ${esEdicion ? 'actualización' : 'registro'}:`, error);
+      console.error("Error en registro:", error);
     }
   };
 
   return (
     <View className="flex-1 bg-background">
       {/* PASO 1: DATOS PERSONALES */}
-      {pasoActual === 1 && (
-        <DatosPersonales
-          cedulaIdentidad={cedulaIdentidad || ''}
-          pasoActual={pasoActual}
-          totalPasos={totalPasos}
-          esEdicion={esEdicion}
-          onNavigate={handleNavigate}
-          codigoDenuncia={codigoDenuncia}
-        />
-      )}
+      {pasoActual === 1 && <DatosPersonales pasoActual={pasoActual} totalPasos={totalPasos} onNavigate={handleNavigate} />}
 
       {/* PASO 2: DATOS DE UBICACIÓN */}
-      {pasoActual === 2 && <DatosUbicacion pasoActual={pasoActual} totalPasos={totalPasos} esEdicion={esEdicion} onNavigate={handleNavigate} />}
+      {pasoActual === 2 && <DatosUbicacion pasoActual={pasoActual} totalPasos={totalPasos} onNavigate={handleNavigate} />}
 
       {/* PASO 3: CONTACTOS DE EMERGENCIA */}
       {pasoActual === 3 && (
-        <DatosContactoEmergencia
-          pasoActual={pasoActual}
-          totalPasos={totalPasos}
-          esEdicion={esEdicion}
-          onNavigate={handleNavigate}
-          isLoading={isLoading}
-        />
+        <DatosContactoEmergencia pasoActual={pasoActual} totalPasos={totalPasos} onNavigate={handleNavigate} isLoading={isLoading} />
       )}
     </View>
   );

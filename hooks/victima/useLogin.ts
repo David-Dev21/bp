@@ -1,21 +1,34 @@
 import { useRouter } from "expo-router";
-import { Alert } from "react-native";
+import { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAtenticacionStore } from "~/stores/victimas/atenticacionStore";
-import { VictimaService } from "~/services/victima/victimaService";
-import { DenunciasService } from "~/services/victima/denunciasService";
-import { useRegistroStore } from "~/stores/registro/registroStore";
+import { toast } from "sonner-native";
+import { useAtenticacionStore } from "~/stores/atenticacionStore";
+import { VictimaService } from "~/services/victimaService";
+import { DenunciasService } from "~/services/denunciasService";
+import { usePerfilStore } from "~/stores/perfilStore";
 import { PerfilVictima, ContactoEmergencia } from "~/lib/tiposApi";
+
+interface DispositivoDiferente {
+  mostrar: boolean;
+  idVictima: string;
+}
 
 export const useLogin = () => {
   const router = useRouter();
   const { setUsuario, setCodigoDenuncia } = useAtenticacionStore();
-  const { setDatosPersonales, setDatosUbicacion, setContactosEmergencia } = useRegistroStore();
+  const { setDatosPersonales, setDatosUbicacion, setContactosEmergencia } = usePerfilStore();
+
+  // Estado para manejar AlertDialog de dispositivo diferente
+  const [dispositivoDiferente, setDispositivoDiferente] = useState<DispositivoDiferente>({
+    mostrar: false,
+    idVictima: "",
+  });
 
   const verificarDenuncia = async (codigoDenuncia: string, cedulaIdentidad: string) => {
     const verificacion = await DenunciasService.verificarDenunciaPorCodigoYCedula(codigoDenuncia, cedulaIdentidad);
     if (!verificacion.exito || !verificacion.datos?.codigoValido) {
-      Alert.alert("Código inválido", "El código de denuncia no existe o es incorrecto. Verifícalo con las autoridades.");
+      const mensajeError = verificacion.error ? `${verificacion.mensaje} - ${verificacion.error}` : verificacion.mensaje;
+      toast.error(mensajeError);
       return false;
     }
     return true;
@@ -47,7 +60,8 @@ export const useLogin = () => {
       cargarDatosPerfil(perfil.datos.victima);
       router.push("/verificar-codigo" as any);
     } else {
-      Alert.alert("Error", "No se pudo cargar tu información");
+      const mensajeError = perfil.error ? `${perfil.mensaje} - ${perfil.error}` : perfil.mensaje;
+      toast.error(mensajeError);
     }
   };
 
@@ -78,10 +92,8 @@ export const useLogin = () => {
       const idDispositivo = datosUsuario.idDispositivo;
       const storedId = await AsyncStorage.getItem("id_dispositivo");
       if (storedId && idDispositivo && idDispositivo !== storedId) {
-        Alert.alert("Sesión iniciada en otro dispositivo", "¿Quieres cambiar la sesión a este dispositivo?", [
-          { text: "Cancelar", style: "cancel" },
-          { text: "Cambiar", onPress: () => manejarUsuarioPendiente(idVictima) },
-        ]);
+        // Mostrar AlertDialog en el componente
+        setDispositivoDiferente({ mostrar: true, idVictima });
         return;
       }
 
@@ -92,8 +104,7 @@ export const useLogin = () => {
         await manejarUsuarioValidado(idVictima);
       }
     } catch (error: any) {
-      console.error("Error:", error);
-      Alert.alert("Error", "Algo salió mal. Intenta nuevamente.");
+      toast.error("Algo salió mal. Intenta nuevamente.");
     }
   };
 
@@ -130,5 +141,10 @@ export const useLogin = () => {
     );
   };
 
-  return { manejarLogin };
+  return {
+    manejarLogin,
+    dispositivoDiferente,
+    setDispositivoDiferente,
+    manejarUsuarioPendiente,
+  };
 };

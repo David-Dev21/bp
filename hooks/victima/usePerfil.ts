@@ -1,17 +1,13 @@
 import { useEffect, useState } from "react";
-import { Alert } from "react-native";
-import { useAtenticacionStore } from "~/stores/victimas/atenticacionStore";
-import { useRegistroStore } from "~/stores/registro/registroStore";
-import { VictimaService } from "~/services/victima/victimaService";
+import { toast } from "sonner-native";
+import { useAtenticacionStore } from "~/stores/atenticacionStore";
+import { usePerfilStore } from "~/stores/perfilStore";
+import { VictimaService } from "~/services/victimaService";
 import { ContactoEmergencia } from "~/lib/tiposApi";
 
-/**
- * Hook para manejar la lógica del perfil de usuario
- * Solo carga datos si no existen en el store global
- */
 export function usePerfil() {
   const { idVictima } = useAtenticacionStore();
-  const { datosPersonales, datosUbicacion, contactosEmergencia, setDatosPersonales, setDatosUbicacion, setContactosEmergencia } = useRegistroStore();
+  const { datosPersonales, datosUbicacion, contactosEmergencia, setDatosPersonales, setDatosUbicacion, setContactosEmergencia } = usePerfilStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
 
@@ -71,10 +67,12 @@ export function usePerfil() {
         }
 
         setHasLoaded(true);
+      } else {
+        const mensajeError = respuesta.error ? `${respuesta.mensaje} - ${respuesta.error}` : respuesta.mensaje;
+        toast.error(mensajeError);
       }
     } catch (error) {
-      console.error("Error cargando perfil:", error);
-      Alert.alert("Error", "No se pudieron cargar los datos del perfil");
+      toast.error(error instanceof Error ? error.message : "Error al cargar perfil");
     } finally {
       setIsRefreshing(false);
     }

@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Alert } from 'react-native';
-import { DenunciasService } from '~/services/victima/denunciasService';
-import { VictimaService } from '~/services/victima/victimaService';
+import { useState } from "react";
+import { toast } from "sonner-native";
+import { DenunciasService } from "~/services/denunciasService";
+import { VictimaService } from "~/services/victimaService";
 
 export const useAutenticacion = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,16 +18,19 @@ export const useAutenticacion = () => {
         if (verificacion.exito && verificacion.datos?.existe && verificacion.datos.idVictima) {
           return { success: true, idVictima: verificacion.datos.idVictima };
         } else {
-          Alert.alert('Usuario no encontrado', 'No encontramos tu registro. Regístrate primero.');
-          return { success: false, message: 'Usuario no encontrado' };
+          const mensajeError = verificacion.error ? `${verificacion.mensaje} - ${verificacion.error}` : verificacion.mensaje;
+          toast.error(mensajeError);
+          return { success: false, message: verificacion.mensaje };
         }
       } else {
-        Alert.alert('Denuncia inválida', 'El código de denuncia no es válido.');
-        return { success: false, message: 'Denuncia inválida' };
+        const mensajeError = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
+        toast.error(mensajeError);
+        return { success: false, message: result.mensaje };
       }
     } catch (error) {
-      Alert.alert('Error', 'Algo salió mal. Intenta nuevamente.');
-      return { success: false, message: 'Error desconocido' };
+      const mensajeError = error instanceof Error ? error.message : "Error al autenticar";
+      toast.error(mensajeError);
+      return { success: false, message: mensajeError };
     } finally {
       setIsLoading(false);
     }

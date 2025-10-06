@@ -8,6 +8,7 @@ export interface DatosPersonales {
   celular: string;
   correo: string;
   fechaRegistro?: string;
+  codigoDenuncia?: string;
 }
 
 export interface DatosUbicacion {
@@ -24,6 +25,7 @@ export interface DatosUbicacion {
 }
 
 export interface ContactoEmergencia {
+  id?: string;
   parentesco: string;
   nombre: string;
   telefono: string;
@@ -36,24 +38,14 @@ interface EstadoRegistro {
   datosUbicacion: DatosUbicacion;
   contactosEmergencia: ContactoEmergencia[];
 
-  // Estado de validación
-  validacionPasos: {
-    paso1: boolean;
-    paso2: boolean;
-    paso3: boolean;
-  };
-
   // Acciones para datos personales
   setDatosPersonales: (datos: Partial<DatosPersonales>) => void;
-  validarPaso1: (esValido: boolean) => void;
 
   // Acciones para datos de ubicación
   setDatosUbicacion: (datos: Partial<DatosUbicacion>) => void;
-  validarPaso2: (esValido: boolean) => void;
 
   // Acciones para contactos de emergencia
   setContactosEmergencia: (contactos: ContactoEmergencia[]) => void;
-  validarPaso3: (esValido: boolean) => void;
 
   // Utilidades
   limpiarDatos: () => void;
@@ -66,11 +58,11 @@ interface EstadoRegistro {
 
 const estadoInicialDatosPersonales: DatosPersonales = {
   cedulaIdentidad: "",
-  nombres: "Vanessa",
-  apellidos: "Pérez García",
+  nombres: "",
+  apellidos: "",
   fechaNacimiento: "",
-  celular: "79550230",
-  correo: "juan.perez@email.com",
+  celular: "",
+  correo: "",
   fechaRegistro: new Date().toISOString(),
 };
 
@@ -80,44 +72,25 @@ const estadoInicialDatosUbicacion: DatosUbicacion = {
   provincia: "",
   departamento: "",
   direccion: {
-    zona: "Villa Fátima",
-    calle: "Calle 21 de Calacoto",
-    numero: "1234",
-    referencia: "Cerca del mercado central",
+    zona: "",
+    calle: "",
+    numero: "",
+    referencia: "",
   },
 };
 
-const estadoInicialContactosEmergencia: ContactoEmergencia[] = [
-  {
-    parentesco: "Madre",
-    nombre: "María González Pérez",
-    telefono: "70123456",
-    esPrincipal: true,
-  },
-];
+const estadoInicialContactosEmergencia: ContactoEmergencia[] = [];
 
-const estadoInicialValidacion = {
-  paso1: false,
-  paso2: false,
-  paso3: false,
-};
-
-export const useRegistroStore = create<EstadoRegistro>((set, get) => ({
+export const usePerfilStore = create<EstadoRegistro>((set, get) => ({
   // Estado inicial
   datosPersonales: estadoInicialDatosPersonales,
   datosUbicacion: estadoInicialDatosUbicacion,
   contactosEmergencia: estadoInicialContactosEmergencia,
-  validacionPasos: estadoInicialValidacion,
 
   // Acciones para datos personales
   setDatosPersonales: (datos) =>
     set((state) => ({
       datosPersonales: { ...state.datosPersonales, ...datos },
-    })),
-
-  validarPaso1: (esValido) =>
-    set((state) => ({
-      validacionPasos: { ...state.validacionPasos, paso1: esValido },
     })),
 
   // Acciones para datos de ubicación
@@ -126,20 +99,10 @@ export const useRegistroStore = create<EstadoRegistro>((set, get) => ({
       datosUbicacion: { ...state.datosUbicacion, ...datos },
     })),
 
-  validarPaso2: (esValido) =>
-    set((state) => ({
-      validacionPasos: { ...state.validacionPasos, paso2: esValido },
-    })),
-
   // Acciones para contactos de emergencia
   setContactosEmergencia: (contactos: ContactoEmergencia[]) =>
     set(() => ({
       contactosEmergencia: contactos,
-    })),
-
-  validarPaso3: (esValido) =>
-    set((state) => ({
-      validacionPasos: { ...state.validacionPasos, paso3: esValido },
     })),
 
   // Utilidades
@@ -148,7 +111,6 @@ export const useRegistroStore = create<EstadoRegistro>((set, get) => ({
       datosPersonales: estadoInicialDatosPersonales,
       datosUbicacion: estadoInicialDatosUbicacion,
       contactosEmergencia: estadoInicialContactosEmergencia,
-      validacionPasos: estadoInicialValidacion,
     })),
 
   obtenerDatosCompletos: () => {

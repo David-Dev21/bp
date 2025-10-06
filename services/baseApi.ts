@@ -4,7 +4,7 @@ import axios, { AxiosResponse, AxiosError } from "axios";
 const BASE_URL = process.env.EXPO_PUBLIC_ALERTAS_URL;
 
 // Configurar axios instance para servidor local
-const alertaApi = axios.create({
+const baseApi = axios.create({
   baseURL: BASE_URL,
   timeout: 8000, // 8 segundos máximo
   headers: {
@@ -14,7 +14,7 @@ const alertaApi = axios.create({
 });
 
 // Agregar interceptores para logging en desarrollo
-alertaApi.interceptors.response.use(
+baseApi.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log de responses exitosas en desarrollo
     if (process.env.NODE_ENV === "development") {
@@ -51,28 +51,71 @@ const obtenerMensajeError = (error: AxiosError): string => {
 export const alertasApi = {
   async post(endpoint: string, data: any, config?: any) {
     try {
-      const response = await alertaApi.post(endpoint, data, config);
+      const response = await baseApi.post(endpoint, data, config);
       return response.data;
-    } catch (error) {
-      throw error;
+    } catch (error: any) {
+      // Retornar el error en formato RespuestaBase
+      if (error.response?.data) {
+        return error.response.data; // Ya viene con formato { exito: false, codigo, mensaje, error }
+      }
+      // Error de red u otro
+      return {
+        exito: false,
+        codigo: 500,
+        mensaje: "Error de conexión",
+        error: error.message || "Error desconocido",
+      };
     }
   },
 
   async get(endpoint: string, config?: any) {
     try {
-      const response = await alertaApi.get(endpoint, config);
+      const response = await baseApi.get(endpoint, config);
       return response.data;
-    } catch (error) {
-      throw error;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        exito: false,
+        codigo: 500,
+        mensaje: "Error de conexión",
+        error: error.message || "Error desconocido",
+      };
     }
   },
 
   async patch(endpoint: string, data: any, config?: any) {
     try {
-      const response = await alertaApi.patch(endpoint, data, config);
+      const response = await baseApi.patch(endpoint, data, config);
       return response.data;
-    } catch (error) {
-      throw error;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        exito: false,
+        codigo: 500,
+        mensaje: "Error de conexión",
+        error: error.message || "Error desconocido",
+      };
+    }
+  },
+
+  async delete(endpoint: string, config?: any) {
+    try {
+      const response = await baseApi.delete(endpoint, config);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        exito: false,
+        codigo: 500,
+        mensaje: "Error de conexión",
+        error: error.message || "Error desconocido",
+      };
     }
   },
 };

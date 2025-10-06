@@ -8,6 +8,11 @@
     "scheme": "bt-felcv",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/iconos/ios/AppIcon@3x.png",
+      "backgroundColor": "#009688",
+      "resizeMode": "contain"
+    },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,

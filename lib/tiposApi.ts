@@ -4,7 +4,20 @@ export interface RespuestaBase<T = any> {
   codigo: number;
   mensaje: string;
   datos?: T;
+  error?: string;
 }
+
+// Interfaces para unidades policiales
+export interface UnidadPolicial {
+  id: string;
+  nombre: string;
+  direccion: string;
+  latitud: number;
+  longitud: number;
+}
+
+// Respuesta para unidades policiales
+export interface RespuestaUnidadesPoliciales extends RespuestaBase<{ unidades: UnidadPolicial[] }> {}
 
 // Tipos específicos para datos comunes
 export interface DatosMunicipio {
@@ -72,7 +85,6 @@ export interface PerfilVictima {
 }
 
 // Interfaces específicas para respuestas de víctimas
-// Interfaces específicas para respuestas de víctimas
 export interface RespuestaVerificarVictima
   extends RespuestaBase<{ existe: boolean; idVictima?: string; estadoCuenta?: EstadoCuenta; idDispositivo?: string }> {}
 
@@ -89,3 +101,17 @@ export interface RespuestaEstadoAlerta extends RespuestaBase<{ estadoAlerta: Est
 export interface RespuestaUbicacionGPS extends RespuestaBase<DatosUbicacionGeografica> {}
 
 export interface RespuestaVerificarCuenta extends RespuestaBase<{ estadoCuenta: EstadoCuenta }> {}
+
+// Respuestas para denuncias
+export interface RespuestaVerificarDenuncia extends RespuestaBase<{ codigoValido: boolean }> {}
+
+// Respuestas para códigos de verificación
+export interface RespuestaSolicitarCodigo extends RespuestaBase {}
+
+export interface RespuestaVerificarCodigo
+  extends RespuestaBase<{
+    victima: {
+      id: string;
+      apiKey: string;
+    };
+  }> {}

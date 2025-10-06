@@ -1,15 +1,21 @@
-import { useState, useRef, useEffect } from 'react';
-import { Alert } from 'react-native';
-import { useEmergencia } from './useEmergencia';
-import { useAlertaStore } from '~/stores/emergencia/alertaStore';
-import { useActualizacionUbicacion } from './useActualizacionUbicacion';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
+import { useState, useRef } from "react";
+import { toast } from "sonner-native";
+import { useEmergencia } from "./useEmergencia";
+import { useAlertaStore } from "~/stores/alertaStore";
+import { useActualizacionUbicacion } from "./useActualizacionUbicacion";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 interface EstadoBoton {
   primerToque: boolean;
   manteniendoPresionado: boolean;
   tiempoRestante: number;
+}
+
+interface DialogoEstadoAlerta {
+  mostrar: boolean;
+  titulo: string;
+  descripcion: string;
 }
 
 interface ConfiguracionTiempos {
@@ -29,6 +35,12 @@ export function useBotonPanico(configuracion: ConfiguracionTiempos = { tiempoEsp
     tiempoRestante: 0,
   });
 
+  const [dialogoEstadoAlerta, setDialogoEstadoAlerta] = useState<DialogoEstadoAlerta>({
+    mostrar: false,
+    titulo: "",
+    descripcion: "",
+  });
+
   const timers = useRef({
     dobleToque: null as ReturnType<typeof setTimeout> | null,
     mantenido: null as ReturnType<typeof setTimeout> | null,
@@ -42,30 +54,34 @@ export function useBotonPanico(configuracion: ConfiguracionTiempos = { tiempoEsp
         verificarEstadoAlerta()
           .then((resultado) => {
             if (!resultado.success) {
-              // Mostrar error
-              Alert.alert('Error', resultado.error || 'Error al verificar el estado de la alerta');
+              const mensajeError = resultado.error || "Error al verificar el estado de la alerta";
+              toast.error(mensajeError);
             } else if (resultado.estadoFinalizado) {
-              // Mostrar estado final y limpiar
               const mensajes: Record<string, string> = {
-                RESUELTA: 'Tu alerta ha sido resuelta por las autoridades',
-                CANCELADA: 'Tu alerta ha sido cancelada',
-                FALSA_ALERTA: 'Tu alerta ha sido marcada como falsa alerta',
+                RESUELTA: "Tu alerta ha sido resuelta por las autoridades",
+                CANCELADA: "Tu alerta ha sido cancelada",
+                FALSA_ALERTA: "Tu alerta ha sido marcada como falsa alerta",
               };
 
-              Alert.alert('Estado de Alerta', mensajes[resultado.estadoFinalizado] || 'La alerta ha finalizado', [
-                {
-                  text: 'OK',
-                  onPress: () => limpiarAlerta(),
-                },
-              ]);
+              setDialogoEstadoAlerta({
+                mostrar: true,
+                titulo: "Estado de Alerta",
+                descripcion: mensajes[resultado.estadoFinalizado] || "La alerta ha finalizado",
+              });
             }
           })
-          .catch(() => {
-            Alert.alert('Error', 'Error al verificar el estado de la alerta');
+          .catch((error) => {
+            const mensajeError = error instanceof Error ? error.message : "Error al verificar el estado";
+            toast.error(mensajeError);
           });
       }
-    }, [alertaEstaActiva, verificarEstadoAlerta, limpiarAlerta]),
+    }, [alertaEstaActiva, verificarEstadoAlerta, limpiarAlerta])
   );
+
+  const cerrarDialogoYLimpiar = () => {
+    setDialogoEstadoAlerta({ mostrar: false, titulo: "", descripcion: "" });
+    limpiarAlerta();
+  };
 
   const limpiarTimers = () => {
     Object.values(timers.current).forEach((timer) => timer && clearTimeout(timer));
@@ -96,10 +112,14 @@ export function useBotonPanico(configuracion: ConfiguracionTiempos = { tiempoEsp
 
   const ejecutarAccion = async (accion: () => Promise<any>) => {
     resetearEstado();
-    try {
-      await accion();
-    } catch (error) {
-      console.error('Error al ejecutar acción:', error);
+    const resultado = await accion();
+
+    if (resultado && !resultado.exito) {
+      const mensajeError = resultado.error ? `${resultado.mensaje} - ${resultado.error}` : resultado.mensaje;
+      toast.error(mensajeError);
+    } else if (resultado?.exito) {
+      const mensajeExito = resultado.error ? `${resultado.mensaje} - ${resultado.error}` : resultado.mensaje;
+      toast.success(mensajeExito);
     }
   };
 
@@ -152,49 +172,49 @@ export function useBotonPanico(configuracion: ConfiguracionTiempos = { tiempoEsp
 
   const obtenerTextoEstado = (): string => {
     if (alertaEstaActiva) {
-      if (cancelacionSolicitada) return 'Solicitud de cancelación enviada, esperando aprobación';
+      if (cancelacionSolicitada) return "Solicitud de cancelación enviada, esperando aprobación";
       if (estadoBoton.manteniendoPresionado) return `Solicitando cancelación... ${estadoBoton.tiempoRestante}s`;
-      if (estadoBoton.primerToque) return 'Toca nuevamente para solicitar cancelación';
-      return 'Toca 2 veces o mantén presionado para solicitar cancelación';
+      if (estadoBoton.primerToque) return "Toca nuevamente para solicitar cancelación";
+      return "Toca 2 veces o mantén presionado para solicitar cancelación";
     }
 
-    if (enviandoAlerta) return 'Enviando alerta...';
+    if (enviandoAlerta) return "Enviando alerta...";
     if (estadoBoton.manteniendoPresionado) return `Mantén presionado... ${estadoBoton.tiempoRestante}s`;
-    if (estadoBoton.primerToque) return 'Toca nuevamente para confirmar';
-    return 'Toca 2 veces o mantén presionado 3s';
+    if (estadoBoton.primerToque) return "Toca nuevamente para confirmar";
+    return "Toca 2 veces o mantén presionado 3s";
   };
 
   const obtenerEstilosBoton = () => {
     // SOLO estilos inline - no clases
-    let backgroundColor = '#DC2626'; // rojo-600
-    let borderColor = '#B91C1C'; // rojo-700
+    let backgroundColor = "#DC2626"; // rojo-600
+    let borderColor = "#B91C1C"; // rojo-700
 
     if (cancelacionSolicitada) {
-      backgroundColor = '#9CA3AF'; // gris-400
-      borderColor = '#6B7280'; // gris-500
+      backgroundColor = "#9CA3AF"; // gris-400
+      borderColor = "#6B7280"; // gris-500
     } else if (enviandoAlerta) {
-      backgroundColor = '#F87171'; // rojo-400
-      borderColor = '#DC2626'; // rojo-600
+      backgroundColor = "#F87171"; // rojo-400
+      borderColor = "#DC2626"; // rojo-600
     } else if (alertaEstaActiva) {
       // Naranja para alerta activa
-      backgroundColor = '#EA580C'; // naranja-600
-      borderColor = '#C2410C'; // naranja-700
+      backgroundColor = "#EA580C"; // naranja-600
+      borderColor = "#C2410C"; // naranja-700
 
       if (estadoBoton.manteniendoPresionado) {
-        backgroundColor = '#C2410C'; // naranja-700
-        borderColor = '#9A3412'; // naranja-800
+        backgroundColor = "#C2410C"; // naranja-700
+        borderColor = "#9A3412"; // naranja-800
       } else if (estadoBoton.primerToque) {
-        backgroundColor = '#F97316'; // naranja-500
-        borderColor = '#EA580C'; // naranja-600
+        backgroundColor = "#F97316"; // naranja-500
+        borderColor = "#EA580C"; // naranja-600
       }
     } else {
       // Rojo para estado normal
       if (estadoBoton.manteniendoPresionado) {
-        backgroundColor = '#B91C1C'; // rojo-700
-        borderColor = '#991B1B'; // rojo-800
+        backgroundColor = "#B91C1C"; // rojo-700
+        borderColor = "#991B1B"; // rojo-800
       } else if (estadoBoton.primerToque) {
-        backgroundColor = '#EF4444'; // rojo-500
-        borderColor = '#DC2626'; // rojo-600
+        backgroundColor = "#EF4444"; // rojo-500
+        borderColor = "#DC2626"; // rojo-600
       }
     }
 
@@ -211,20 +231,17 @@ export function useBotonPanico(configuracion: ConfiguracionTiempos = { tiempoEsp
   const botonDeshabilitado = enviandoAlerta || cancelacionSolicitada;
 
   return {
-    // Estado
     enviandoAlerta,
     alertaEstaActiva,
     cancelacionSolicitada,
     compartiendoUbicacion,
     estadoBoton,
     botonDeshabilitado,
-
-    // Handlers
+    dialogoEstadoAlerta,
     manejarToque,
     manejarPressIn,
     manejarPressOut,
-
-    // Utilidades
+    cerrarDialogoYLimpiar,
     obtenerTextoEstado,
     obtenerEstilosBoton,
   };

@@ -27,7 +27,11 @@ function SelectValue({
   return (
     <SelectPrimitive.Value
       ref={ref}
-      className={cn('text-foreground line-clamp-1 flex flex-row items-center gap-2 text-sm', !value && 'text-muted-foreground', className)}
+      className={cn(
+        'text-foreground line-clamp-1 flex flex-row items-center gap-2 text-sm',
+        !value && 'text-muted-foreground',
+        className
+      )}
       {...props}
     />
   );
@@ -48,16 +52,15 @@ function SelectTrigger({
     <SelectPrimitive.Trigger
       ref={ref}
       className={cn(
-        'border-input dark:bg-input/30 dark:active:bg-input/50 bg-background flex h-10 native:h-12 flex-row items-center justify-between gap-2 rounded-2xl border px-3 py-2 shadow-sm shadow-black/5 sm:h-9',
+        'border-input dark:bg-input/30 dark:active:bg-input/50 bg-background flex h-10 flex-row items-center justify-between gap-2 rounded-md border px-3 py-2 shadow-sm shadow-black/5 sm:h-9',
         Platform.select({
           web: 'focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-input/50 w-fit whitespace-nowrap text-sm outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0',
         }),
         props.disabled && 'opacity-50',
         size === 'sm' && 'h-8 py-2 sm:py-1.5',
-        className,
+        className
       )}
-      {...props}
-    >
+      {...props}>
       <>{children}</>
       <Icon as={ChevronDown} aria-hidden={true} className="text-muted-foreground size-4" />
     </SelectPrimitive.Trigger>
@@ -82,27 +85,29 @@ function SelectContent({
       <FullWindowOverlay>
         <SelectPrimitive.Overlay style={Platform.select({ native: StyleSheet.absoluteFill })}>
           <TextClassContext.Provider value="text-popover-foreground">
-            <NativeOnlyAnimatedView className="z-[60]" entering={FadeIn} exiting={FadeOut}>
+            <NativeOnlyAnimatedView className="z-50" entering={FadeIn} exiting={FadeOut}>
               <SelectPrimitive.Content
                 className={cn(
-                  'bg-popover border-border relative z-[60] min-w-[8rem] rounded-md border shadow-md shadow-black/5',
+                  'bg-popover border-border relative z-50 min-w-[8rem] rounded-md border shadow-md shadow-black/5',
                   Platform.select({
                     web: cn(
                       'animate-in fade-in-0 zoom-in-95 origin-(--radix-select-content-transform-origin) max-h-52 overflow-y-auto overflow-x-hidden',
                       props.side === 'bottom' && 'slide-in-from-top-2',
-                      props.side === 'top' && 'slide-in-from-bottom-2',
+                      props.side === 'top' && 'slide-in-from-bottom-2'
                     ),
                     native: 'p-1',
                   }),
                   position === 'popper' &&
                     Platform.select({
-                      web: cn(props.side === 'bottom' && 'translate-y-1', props.side === 'top' && '-translate-y-1'),
+                      web: cn(
+                        props.side === 'bottom' && 'translate-y-1',
+                        props.side === 'top' && '-translate-y-1'
+                      ),
                     }),
-                  className,
+                  className
                 )}
                 position={position}
-                {...props}
-              >
+                {...props}>
                 <SelectScrollUpButton />
                 <SelectPrimitive.Viewport
                   className={cn(
@@ -112,10 +117,9 @@ function SelectContent({
                         'w-full',
                         Platform.select({
                           web: 'h-[var(--radix-select-trigger-height)] min-w-[var(--radix-select-trigger-width)]',
-                        }),
-                      ),
-                  )}
-                >
+                        })
+                      )
+                  )}>
                   {children}
                 </SelectPrimitive.Viewport>
                 <SelectScrollDownButton />
@@ -128,11 +132,23 @@ function SelectContent({
   );
 }
 
-function SelectLabel({ className, ...props }: SelectPrimitive.LabelProps & React.RefAttributes<SelectPrimitive.LabelRef>) {
-  return <SelectPrimitive.Label className={cn('text-muted-foreground px-2 py-2 text-xs sm:py-1.5', className)} {...props} />;
+function SelectLabel({
+  className,
+  ...props
+}: SelectPrimitive.LabelProps & React.RefAttributes<SelectPrimitive.LabelRef>) {
+  return (
+    <SelectPrimitive.Label
+      className={cn('text-muted-foreground px-2 py-2 text-xs sm:py-1.5', className)}
+      {...props}
+    />
+  );
 }
 
-function SelectItem({ className, children, ...props }: SelectPrimitive.ItemProps & React.RefAttributes<SelectPrimitive.ItemRef>) {
+function SelectItem({
+  className,
+  children,
+  ...props
+}: SelectPrimitive.ItemProps & React.RefAttributes<SelectPrimitive.ItemRef>) {
   return (
     <SelectPrimitive.Item
       className={cn(
@@ -141,10 +157,9 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.ItemProps
           web: 'focus:bg-accent focus:text-accent-foreground *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 cursor-default outline-none data-[disabled]:pointer-events-none [&_svg]:pointer-events-none',
         }),
         props.disabled && 'opacity-50',
-        className,
+        className
       )}
-      {...props}
-    >
+      {...props}>
       <View className="absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
           <Icon as={Check} className="text-muted-foreground size-4 shrink-0" />
@@ -155,9 +170,19 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.ItemProps
   );
 }
 
-function SelectSeparator({ className, ...props }: SelectPrimitive.SeparatorProps & React.RefAttributes<SelectPrimitive.SeparatorRef>) {
+function SelectSeparator({
+  className,
+  ...props
+}: SelectPrimitive.SeparatorProps & React.RefAttributes<SelectPrimitive.SeparatorRef>) {
   return (
-    <SelectPrimitive.Separator className={cn('bg-border -mx-1 my-1 h-px', Platform.select({ web: 'pointer-events-none' }), className)} {...props} />
+    <SelectPrimitive.Separator
+      className={cn(
+        'bg-border -mx-1 my-1 h-px',
+        Platform.select({ web: 'pointer-events-none' }),
+        className
+      )}
+      {...props}
+    />
   );
 }
 
@@ -165,12 +190,17 @@ function SelectSeparator({ className, ...props }: SelectPrimitive.SeparatorProps
  * @platform Web only
  * Returns null on native platforms
  */
-function SelectScrollUpButton({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
+function SelectScrollUpButton({
+  className,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
   if (Platform.OS !== 'web') {
     return null;
   }
   return (
-    <SelectPrimitive.ScrollUpButton className={cn('flex cursor-default items-center justify-center py-1', className)} {...props}>
+    <SelectPrimitive.ScrollUpButton
+      className={cn('flex cursor-default items-center justify-center py-1', className)}
+      {...props}>
       <Icon as={ChevronUpIcon} className="size-4" />
     </SelectPrimitive.ScrollUpButton>
   );
@@ -180,12 +210,17 @@ function SelectScrollUpButton({ className, ...props }: React.ComponentProps<type
  * @platform Web only
  * Returns null on native platforms
  */
-function SelectScrollDownButton({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
+function SelectScrollDownButton({
+  className,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
   if (Platform.OS !== 'web') {
     return null;
   }
   return (
-    <SelectPrimitive.ScrollDownButton className={cn('flex cursor-default items-center justify-center py-1', className)} {...props}>
+    <SelectPrimitive.ScrollDownButton
+      className={cn('flex cursor-default items-center justify-center py-1', className)}
+      {...props}>
       <Icon as={ChevronDownIcon} className="size-4" />
     </SelectPrimitive.ScrollDownButton>
   );

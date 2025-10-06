@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { AlertaService, AlertaEmergencia } from "~/services/emergencia/alertaService";
-import { useAtenticacionStore } from "~/stores/victimas/atenticacionStore";
-import { useAlertaStore } from "~/stores/emergencia/alertaStore";
-import * as Location from "expo-location";
+import { toast } from "sonner-native";
+import { AlertaService, AlertaEmergencia } from "~/services/alertaService";
+import { useAtenticacionStore } from "~/stores/atenticacionStore";
+import { useAlertaStore } from "~/stores/alertaStore";
+import { useUbicacionDispositivo } from "~/hooks/ubicacion/useUbicacionDispositivo";
 
 export function useEmergencia() {
   const [enviandoAlerta, setEnviandoAlerta] = useState(false);
   const { idVictima, codigoDenuncia } = useAtenticacionStore();
   const { idAlerta, estado, cancelacionSolicitada, setAlertaActiva, setCancelacionSolicitada } = useAlertaStore();
+  const { obtenerUbicacionActual } = useUbicacionDispositivo();
 
   // Si hay idAlerta, significa que hay alerta activa
   const alertaEstaActiva = Boolean(idAlerta);
@@ -15,11 +17,11 @@ export function useEmergencia() {
   const enviarAlertaEmergencia = async () => {
     // NO permitir enviar si ya hay una alerta activa
     if (enviandoAlerta || alertaEstaActiva) {
-      throw new Error("Ya hay una alerta activa");
+      return null;
     }
 
     if (!idVictima || !codigoDenuncia) {
-      throw new Error("Datos de usuario incompletos para enviar alerta");
+      return null;
     }
 
     setEnviandoAlerta(true);
@@ -38,7 +40,7 @@ export function useEmergencia() {
       const respuesta = await AlertaService.enviarAlerta(datosAlerta);
 
       if (!respuesta.exito || !respuesta.datos) {
-        throw new Error(respuesta.mensaje || "Error al enviar la alerta");
+        return respuesta;
       }
 
       // Guardar SOLO idAlerta y estado en el store
@@ -46,49 +48,38 @@ export function useEmergencia() {
 
       return respuesta;
     } catch (error) {
-      throw error;
+      return { exito: false, codigo: 500, mensaje: error instanceof Error ? error.message : "Error al enviar alerta" };
     } finally {
       setEnviandoAlerta(false);
     }
   };
 
   const obtenerUbicacion = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return null;
+    const location = await obtenerUbicacionActual();
+    if (!location) return null;
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-        timeInterval: 8000,
-      });
-      return {
-        longitud: location.coords.longitude,
-        latitud: location.coords.latitude,
-        precision: 10,
-        marcaTiempo: AlertaService.obtenerFechaHoraISO(),
-      };
-    } catch {
-      return null;
-    }
+    return {
+      longitud: location.coords.longitude,
+      latitud: location.coords.latitude,
+      precision: 10,
+      marcaTiempo: AlertaService.obtenerFechaHoraISO(),
+    };
   };
 
   const solicitarCancelacionAlerta = async () => {
     if (!idAlerta) {
-      throw new Error("No hay alerta activa para solicitar cancelación");
+      return { exito: false, codigo: 400, mensaje: "No hay alerta activa" };
     }
 
     if (cancelacionSolicitada) {
-      throw new Error("Ya se solicitó la cancelación de esta alerta");
+      return { exito: false, codigo: 400, mensaje: "Ya se solicitó la cancelación" };
     }
 
-    try {
-      await AlertaService.solicitarCancelacionAlerta(idAlerta);
+    const resultado = await AlertaService.solicitarCancelacionAlerta(idAlerta);
+    if (resultado.exito) {
       setCancelacionSolicitada(true);
-      return true;
-    } catch (error) {
-      // El servicio ya maneja y lanza errores específicos
-      throw error;
     }
+    return resultado;
   };
 
   return {

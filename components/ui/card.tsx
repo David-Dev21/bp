@@ -9,19 +9,7 @@ function Card({
 }: ViewProps & {
   ref?: React.RefObject<View>;
 }) {
-  return (
-    <View
-      className={cn("rounded-xl bg-card", className)}
-      style={{
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
-      }}
-      {...props}
-    />
-  );
+  return <View className={cn("rounded-2xl", className)} {...props} />;
 }
 
 function CardHeader({

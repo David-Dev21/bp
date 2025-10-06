@@ -1,43 +1,88 @@
-import React from "react";
-import { View, ScrollView, Alert, RefreshControl } from "react-native";
-import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import { View, ScrollView, RefreshControl, Pressable } from "react-native";
 import { Text } from "~/components/ui/text";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { useAtenticacionStore } from "~/stores/victimas/atenticacionStore";
-import { Ionicons } from "@expo/vector-icons";
 import { formateadorFecha } from "~/lib/formato/formateadorFecha";
 import { usePerfil } from "~/hooks/victima/usePerfil";
+import { ContactoEmergencia } from "~/stores/perfilStore";
+import ModalContactoEmergencia from "~/components/registro/ModalContactoEmergencia";
+import EditarPerfil from "~/components/edicion/editar-perfil";
+import EditarUbicacion from "~/components/edicion/editar-ubicacion";
 import { THEME_COLORS } from "~/lib/theme";
 import { useColorScheme } from "nativewind";
+import { Ionicons, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 
 // Pantalla de perfil del usuario (solo lectura)
 export default function PantallaPerfil() {
-  const router = useRouter();
-  const { cerrarSesion } = useAtenticacionStore();
   const { colorScheme } = useColorScheme();
   const tema = THEME_COLORS[colorScheme === "dark" ? "dark" : "light"];
 
   const { datosPersonales, datosUbicacion, contactosEmergencia, isRefreshing, refrescarDatos } = usePerfil();
 
-  const handleCerrarSesion = () => {
-    Alert.alert("Cerrar Sesión", "¿Estás seguro de que quieres cerrar sesión?", [
-      {
-        text: "Cancelar",
-        style: "cancel",
-      },
-      {
-        text: "Cerrar Sesión",
-        style: "destructive",
-        onPress: () => {
-          cerrarSesion();
-          router.replace("/");
-        },
-      },
-    ]);
+  // Estado para modales
+  const [modalPerfilAbierto, setModalPerfilAbierto] = useState(false);
+  const [modalUbicacionAbierto, setModalUbicacionAbierto] = useState(false);
+  const [modalContactoAbierto, setModalContactoAbierto] = useState(false);
+  const [contactoTemporal, setContactoTemporal] = useState<ContactoEmergencia>({
+    nombre: "",
+    telefono: "",
+    parentesco: "",
+    esPrincipal: false,
+  });
+  const [editandoIndex, setEditandoIndex] = useState<number | null>(null);
+
+  // Funciones para manejar contactos
+  const actualizarContactoTemporal = (campo: keyof ContactoEmergencia, valor: string | boolean) => {
+    setContactoTemporal((prev) => ({ ...prev, [campo]: valor }));
+  };
+
+  const validarContactoTemporal = () => {
+    return contactoTemporal.nombre.trim() !== "" && contactoTemporal.telefono.trim() !== "" && contactoTemporal.parentesco !== "";
+  };
+
+  const guardarContacto = () => {
+    if (!validarContactoTemporal()) return;
+
+    // Aquí irá la lógica para guardar el contacto
+    console.log("Guardar contacto:", contactoTemporal);
+
+    // Resetear estado
+    setContactoTemporal({
+      nombre: "",
+      telefono: "",
+      parentesco: "",
+      esPrincipal: false,
+    });
+    setEditandoIndex(null);
+    setModalContactoAbierto(false);
+  };
+
+  const editarContacto = (index: number) => {
+    const contacto = contactosEmergencia[index];
+    setContactoTemporal({
+      nombre: contacto.nombre,
+      telefono: contacto.telefono,
+      parentesco: contacto.parentesco,
+      esPrincipal: contacto.esPrincipal,
+    });
+    setEditandoIndex(index);
+    setModalContactoAbierto(true);
+  };
+
+  const agregarContacto = () => {
+    setContactoTemporal({
+      nombre: "",
+      telefono: "",
+      parentesco: "",
+      esPrincipal: false,
+    });
+    setEditandoIndex(null);
+    setModalContactoAbierto(true);
   };
 
   const CampoPerfil = ({ icono, etiqueta, valor }: { icono: string; etiqueta: string; valor: string }) => (
-    <View className="flex-row items-center py-2 px-3 bg-card/50 rounded-lg mb-1.5">
+    <View className="flex-row items-center py-2 px-3 rounded-lg flex-1 mr-2 mb-0">
       <View className="w-8 h-8 bg-primary/10 rounded-full items-center justify-center mr-2">
         <Ionicons name={icono as any} size={16} color={tema.primary} />
       </View>
@@ -45,12 +90,6 @@ export default function PantallaPerfil() {
         <Text className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{etiqueta}</Text>
         <Text className="text-sm text-foreground font-medium">{valor}</Text>
       </View>
-    </View>
-  );
-
-  const CampoPerfilCompacto = ({ icono, etiqueta, valor }: { icono: string; etiqueta: string; valor: string }) => (
-    <View className="flex-1 mr-2">
-      <CampoPerfil icono={icono} etiqueta={etiqueta} valor={valor} />
     </View>
   );
 
@@ -62,7 +101,7 @@ export default function PantallaPerfil() {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refrescarDatos} colors={[tema.primary]} />}
       >
         {/* Header del perfil - más compacto */}
-        <View className="flex-row items-center px-4 py-2 bg-card/50">
+        <View className="flex-row items-center justify-start p-4">
           <View className="w-10 h-10 bg-primary/20 rounded-full items-center justify-center">
             <Ionicons name="person" size={24} color={tema.primary} />
           </View>
@@ -88,14 +127,22 @@ export default function PantallaPerfil() {
             <>
               {/* Información Personal - optimizada */}
               <View className="mb-2">
-                <View className="flex-row">
-                  <CampoPerfilCompacto icono="card-outline" etiqueta="Cédula" valor={datosPersonales.cedulaIdentidad || "No especificado"} />
-                  <CampoPerfilCompacto icono="call-outline" etiqueta="Celular" valor={datosPersonales.celular || "No especificado"} />
+                <View className="flex-row items-center justify-between mb-3">
+                  <View className="flex-row items-center">
+                    <Ionicons name="person" size={20} color={tema.primary} />
+                    <Text className="text-lg font-bold text-foreground ml-2">Datos Personales</Text>
+                  </View>
+                  <Button onPress={() => setModalPerfilAbierto(true)} variant="secondary" size="icon">
+                    <FontAwesome5 name="user-edit" size={20} color={tema.primary} />
+                  </Button>
                 </View>
-
+                <View className="flex-row">
+                  <CampoPerfil icono="card-outline" etiqueta="Cédula" valor={datosPersonales.cedulaIdentidad || "No especificado"} />
+                  <CampoPerfil icono="call-outline" etiqueta="Celular" valor={datosPersonales.celular || "No especificado"} />
+                </View>
                 {/* Segunda fila */}
                 <View className="flex-row mb-1">
-                  <CampoPerfilCompacto
+                  <CampoPerfil
                     icono="calendar-outline"
                     etiqueta="Nacimiento"
                     valor={
@@ -104,7 +151,7 @@ export default function PantallaPerfil() {
                         : "No especificado"
                     }
                   />
-                  <CampoPerfilCompacto
+                  <CampoPerfil
                     icono="people-outline"
                     etiqueta="Edad"
                     valor={
@@ -117,97 +164,100 @@ export default function PantallaPerfil() {
                   />
                 </View>
                 {/* Tercera fila - Información adicional */}
-                <View className="flex-row mb-1">
-                  <CampoPerfilCompacto icono="mail-outline" etiqueta="Correo" valor={datosPersonales.correo || "No especificado"} />
+                <View className="mb-1">
+                  <CampoPerfil icono="mail-outline" etiqueta="Correo" valor={datosPersonales.correo || "No especificado"} />
                 </View>
               </View>
 
-              {/* Ubicación Completa */}
+              {/* Ubicación */}
               <View className="mb-2">
-                <View className="flex-row items-center mb-3">
-                  <Ionicons name="location" size={20} color={tema.primary} />
-                  <Text className="text-lg font-bold text-foreground ml-2">Datos de Ubicación</Text>
+                <View className="flex-row items-center justify-between mb-3">
+                  <View className="flex-row items-center">
+                    <Ionicons name="location" size={20} color={tema.primary} />
+                    <Text className="text-lg font-bold text-foreground ml-2">Ubicación</Text>
+                  </View>
+                  <Button onPress={() => setModalUbicacionAbierto(true)} variant="secondary" size="icon">
+                    <MaterialIcons name="edit-location-alt" size={24} color={tema.primary} />
+                  </Button>
                 </View>
-
-                <View className="flex-row px-2">
-                  {/* Columna Ubicación */}
-                  <View className="flex-1 bg-card/50 rounded-lg">
-                    <Text className="text-sm text-foreground leading-5">
-                      <Text className="font-semibold">Municipio:</Text>
-                      {"\n"}
-                      {datosUbicacion.municipio || "No especificado"}
-                      {"\n"}
-                      <Text className="font-semibold">Provincia:</Text>
-                      {"\n"}
-                      {datosUbicacion.provincia || "No especificado"}
-                      {"\n"}
-                      <Text className="font-semibold">Departamento:</Text>
-                      {"\n"}
-                      {datosUbicacion.departamento || "No especificado"}
-                      {"\n"}
-                    </Text>
-                  </View>
-
-                  {/* Columna Dirección */}
-                  <View className="flex-1 bg-card/50 rounded-lg">
-                    <Text className="text-sm text-foreground leading-5">
-                      <Text className="font-semibold">Calle:</Text>
-                      {"\n"}
-                      {datosUbicacion.direccion.calle} {datosUbicacion.direccion.numero}
-                      {"\n"}
-                      {datosUbicacion.direccion.zona && (
-                        <>
-                          <Text className="font-semibold">Zona:</Text>
-                          {"\n"}
-                          {datosUbicacion.direccion.zona}
-                          {"\n"}
-                        </>
-                      )}
-                      {datosUbicacion.direccion.referencia && (
-                        <>
-                          <Text className="font-semibold">Referencia:</Text>
-                          {"\n"}
-                          {datosUbicacion.direccion.referencia}
-                          {"\n"}
-                        </>
-                      )}
-                    </Text>
-                  </View>
+                <View className="mb-1">
+                  <CampoPerfil
+                    icono="location-outline"
+                    etiqueta="Ubicación"
+                    valor={`${datosUbicacion.municipio || "No especificado"}, ${datosUbicacion.provincia || "No especificado"}, ${
+                      datosUbicacion.departamento || "No especificado"
+                    }`}
+                  />
+                </View>
+                <View className="mb-1">
+                  <CampoPerfil
+                    icono="home-outline"
+                    etiqueta="Dirección"
+                    valor={`${datosUbicacion.direccion.calle} ${datosUbicacion.direccion.numero}${
+                      datosUbicacion.direccion.zona ? `, ${datosUbicacion.direccion.zona}` : ""
+                    }${datosUbicacion.direccion.referencia ? ` (${datosUbicacion.direccion.referencia})` : ""}`}
+                  />
                 </View>
               </View>
               <View className="mb-2">
-                <View className="flex-row items-center mb-2">
-                  <Ionicons name="people" size={20} color={tema.primary} />
-                  <Text className="text-lg font-bold text-foreground ml-2">Contactos de Emergencia</Text>
+                <View className="flex-row items-center justify-between mb-2">
+                  <View className="flex-row items-center">
+                    <View className="w-10 h-10 bg-primary/20 rounded-full items-center justify-center">
+                      <Ionicons name="people" size={24} color={tema.primary} />
+                    </View>
+                    <Text className="text-lg font-bold text-foreground ml-2">Contactos de Emergencia</Text>
+                  </View>
+                  <Button onPress={() => setModalContactoAbierto(true)} variant="secondary" size="icon">
+                    <Ionicons name="person-add" size={22} color={tema.primary} />
+                  </Button>
                 </View>
 
-                {!contactosEmergencia || contactosEmergencia.length === 0 ? (
-                  <View className="p-4 items-center">
-                    <Ionicons name="people-outline" size={24} color={tema.primary} />
-                    <Text className="text-center text-muted-foreground mt-1 text-sm">No hay contactos registrados</Text>
+                {contactosEmergencia.map((contacto, index) => (
+                  <View key={index} className="flex-row items-center py-2 px-3 rounded-lg mb-2">
+                    <View className="w-8 h-8 bg-primary/10 rounded-full items-center justify-center mr-2">
+                      <Ionicons name="person-outline" size={16} color={tema.primary} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{contacto.nombre}</Text>
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-sm text-foreground font-medium flex-1">{`${contacto.parentesco} - ${contacto.telefono}`}</Text>
+                        {contacto.esPrincipal && (
+                          <Badge variant="secondary" className="ml-2">
+                            <Text className="text-xs">Principal</Text>
+                          </Badge>
+                        )}
+                      </View>
+                    </View>
+                    <View className="flex-row gap-1">
+                      <Button onPress={() => editarContacto(index)} variant="ghost" size="sm" className="p-2">
+                        <Ionicons name="create" size={16} color={tema.primary} />
+                      </Button>
+                      <Button onPress={() => console.log("Eliminar contacto:", index)} variant="ghost" size="sm" className="p-2">
+                        <Ionicons name="trash" size={16} color="#ef4444" />
+                      </Button>
+                    </View>
                   </View>
-                ) : (
-                  contactosEmergencia.map((contacto, index) => (
-                    <CampoPerfil
-                      key={index}
-                      icono="person"
-                      etiqueta={contacto.nombre}
-                      valor={`${contacto.parentesco} - ${contacto.telefono} ${contacto.esPrincipal ? "(Principal)" : ""}`}
-                    />
-                  ))
-                )}
+                ))}
               </View>
             </>
           )}
-          {/* Botones de acción */}
-          <View className="mb-6">
-            <Button onPress={handleCerrarSesion} variant="destructive" className="flex-row justify-center items-center">
-              <Ionicons name="log-out" size={18} color="#fff" />
-              <Text className="font-semibold ml-2 text-sm">Cerrar Sesión</Text>
-            </Button>
-          </View>
         </View>
       </ScrollView>
+
+      {/* Modales de edición - fuera del ScrollView */}
+      <ModalContactoEmergencia
+        modalAbierto={modalContactoAbierto}
+        setModalAbierto={setModalContactoAbierto}
+        contactoTemporal={contactoTemporal}
+        actualizarContactoTemporal={actualizarContactoTemporal}
+        guardarContacto={guardarContacto}
+        validarContactoTemporal={validarContactoTemporal}
+        editandoIndex={editandoIndex}
+      />
+
+      {modalUbicacionAbierto && <EditarUbicacion />}
+
+      <EditarPerfil abierto={modalPerfilAbierto} onClose={() => setModalPerfilAbierto(false)} />
     </View>
   );
 }
