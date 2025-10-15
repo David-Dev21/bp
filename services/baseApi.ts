@@ -1,12 +1,11 @@
 import axios, { AxiosResponse, AxiosError } from "axios";
+import Constants from "expo-constants"; // ← AGREGAR
+// const BASE_URL = process.env.EXPO_PUBLIC_ALERTAS_URL;
+const BASE_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_ALERTAS_URL || "https://jupiter-guardian-api.policia.bo";
 
-// API base para servidor local
-const BASE_URL = process.env.EXPO_PUBLIC_ALERTAS_URL;
-
-// Configurar axios instance para servidor local
 const baseApi = axios.create({
   baseURL: BASE_URL,
-  timeout: 8000, // 8 segundos máximo
+  timeout: 8000,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",

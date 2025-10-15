@@ -106,7 +106,7 @@ export default function RootLayout() {
                       headerStyle: { backgroundColor: THEME_COLORS.light.primary },
                       headerTintColor: THEME_COLORS.light["primary-foreground"],
                       headerShown: true,
-                      title: "",
+                      title: "Regístrate",
                       headerBackTitle: "Volver",
                     }}
                   />

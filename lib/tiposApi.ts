@@ -9,11 +9,18 @@ export interface RespuestaBase<T = any> {
 
 // Interfaces para unidades policiales
 export interface UnidadPolicial {
-  id: string;
-  nombre: string;
+  id: number;
+  unidad: string;
   direccion: string;
-  latitud: number;
-  longitud: number;
+  ubicacion: {
+    latitud: number;
+    longitud: number;
+  };
+  referencia: string;
+  departamento: string;
+  provincia: string;
+  municipio: string;
+  organismo: string;
 }
 
 // Respuesta para unidades policiales

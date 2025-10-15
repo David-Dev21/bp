@@ -19,7 +19,6 @@ Logger.setLogLevel("error");
 export default memo(function Mapa() {
   const { colorScheme } = useColorScheme();
   const tema = THEME_COLORS[colorScheme === "dark" ? "dark" : "light"];
-  const { unidades, cargando: cargandoUnidades } = useUnidades();
 
   const {
     ubicacionActual,
@@ -35,6 +34,11 @@ export default memo(function Mapa() {
     navegarAUnidad,
     cancelarNavegacion,
   } = useMapa();
+
+  const { unidades, cargando: cargandoUnidades } = useUnidades(
+    ubicacionActual ? ubicacionActual[1] : undefined,
+    ubicacionActual ? ubicacionActual[0] : undefined
+  );
 
   const [unidadSeleccionada, setUnidadSeleccionada] = useState<UnidadPolicial | null>(null);
   const [dialogAbierto, setDialogAbierto] = useState(false);
@@ -110,7 +114,7 @@ export default memo(function Mapa() {
             <PointAnnotation
               key={unidad.id}
               id={`unidad-${unidad.id}`}
-              coordinate={[unidad.longitud, unidad.latitud]}
+              coordinate={[unidad.ubicacion.longitud, unidad.ubicacion.latitud]}
               onSelected={() => {
                 setUnidadSeleccionada(unidad);
                 setDialogAbierto(true);

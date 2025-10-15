@@ -60,7 +60,7 @@ export const BottomSheetUnidades = memo(function BottomSheetUnidades({ unidades,
                 <Ionicons name="shield" size={16} color={themeColors.primary} />
               </View>
               <View className="flex-1">
-                <Text className="font-semibold text-sm flex-1">{unidad.nombre}</Text>
+                <Text className="font-semibold text-sm flex-1">{unidad.unidad}</Text>
                 <Text className="text-xs text-muted-foreground mb-1" numberOfLines={2}>
                   {unidad.direccion}
                 </Text>

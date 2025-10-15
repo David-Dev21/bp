@@ -39,7 +39,7 @@ export function DialogoUnidad({ unidadSeleccionada, abierto, onAbrirCambio, tema
     <AlertDialog open={abierto} onOpenChange={onAbrirCambio}>
       <AlertDialogContent className="w-4/5">
         <AlertDialogHeader>
-          <AlertDialogTitle>{unidadSeleccionada.nombre}</AlertDialogTitle>
+          <AlertDialogTitle>{unidadSeleccionada.unidad}</AlertDialogTitle>
           <AlertDialogDescription>
             <View className="flex-row items-start">
               <Ionicons name="location" size={18} color={tema.primary} />

@@ -2,20 +2,22 @@ import { useState, useEffect } from "react";
 import { UnidadPolicial } from "~/lib/tiposApi";
 import { UnidadesService } from "~/services/unidadesService";
 
-export function useUnidades() {
+export function useUnidades(latitud?: number, longitud?: number) {
   const [unidades, setUnidades] = useState<UnidadPolicial[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    cargarUnidades();
-  }, []);
+    if (latitud !== undefined && longitud !== undefined) {
+      cargarUnidades(latitud, longitud);
+    }
+  }, [latitud, longitud]);
 
-  const cargarUnidades = async () => {
+  const cargarUnidades = async (lat: number, lon: number) => {
     try {
       setCargando(true);
       setError(null);
-      const respuesta = await UnidadesService.obtenerUnidadesCercanas();
+      const respuesta = await UnidadesService.obtenerUnidadesCercanas(lat, lon);
       if (respuesta.exito && respuesta.datos) {
         setUnidades(respuesta.datos.unidades);
       } else {
@@ -30,7 +32,9 @@ export function useUnidades() {
   };
 
   const recargarUnidades = () => {
-    cargarUnidades();
+    if (latitud !== undefined && longitud !== undefined) {
+      cargarUnidades(latitud, longitud);
+    }
   };
 
   return {

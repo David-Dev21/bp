@@ -1,45 +1,33 @@
 import { UnidadPolicial, RespuestaUnidadesPoliciales } from "~/lib/tiposApi";
-
-// Datos de ejemplo de unidades - por ahora estáticos
-const UNIDADES_EJEMPLO: UnidadPolicial[] = [
-  {
-    id: "1",
-    nombre: "F.E.L.C.V. La Paz - Zona Sur",
-    direccion: "Av. Costanera esquina Calle 10, Calacoto",
-    latitud: -16.51,
-    longitud: -68.1293,
-  },
-  {
-    id: "2",
-    nombre: "F.E.L.C.V. La Paz - Centro",
-    direccion: "Calle Comercio #1234",
-    latitud: -16.495,
-    longitud: -68.1343,
-  },
-  {
-    id: "3",
-    nombre: "F.E.L.C.V. La Paz - Alto",
-    direccion: "Av. Buenos Aires #5678",
-    latitud: -16.48,
-    longitud: -68.0993,
-  },
-];
+import { alertasApi } from "./baseApi";
 
 export class UnidadesService {
-  // Por ahora retorna datos estáticos
-  // TODO: Implementar llamada a API cuando esté lista
-  static async obtenerUnidadesCercanas(): Promise<RespuestaUnidadesPoliciales> {
-    // Simular delay de red
-    await new Promise((resolve) => setTimeout(resolve, 500));
+  static async obtenerUnidadesCercanas(latitud: number, longitud: number): Promise<RespuestaUnidadesPoliciales> {
+    try {
+      const respuesta = await alertasApi.get(`/unidades/cercanas?latitud=${latitud}&longitud=${longitud}`);
 
-    return {
-      exito: true,
-      codigo: 200,
-      mensaje: "Unidades obtenidas exitosamente",
-      datos: {
-        unidades: UNIDADES_EJEMPLO,
-      },
-    };
+      if (respuesta.exito && respuesta.datos) {
+        // Los datos ya vienen en el formato correcto
+        return {
+          exito: true,
+          codigo: respuesta.codigo,
+          mensaje: respuesta.mensaje,
+          datos: { unidades: respuesta.datos },
+        };
+      } else {
+        return {
+          exito: false,
+          codigo: respuesta.codigo || 500,
+          mensaje: respuesta.mensaje || "Error al obtener unidades cercanas",
+        };
+      }
+    } catch (error) {
+      return {
+        exito: false,
+        codigo: 500,
+        mensaje: "Error de conexión al obtener unidades cercanas",
+      };
+    }
   }
 
   // Método para calcular distancia entre dos puntos (fórmula de Haversine)

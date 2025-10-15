@@ -96,7 +96,10 @@ export function useMapa(): EstadoMapa & AccionesMapa {
 
       // Si hay navegación activa, recalcular la ruta desde la nueva ubicación
       if (destinoNavegacion) {
-        const rutaActualizada = await navegacionService.obtenerRutaOSRM(nuevaUbicacion, [destinoNavegacion.longitud, destinoNavegacion.latitud]);
+        const rutaActualizada = await navegacionService.obtenerRutaOSRM(nuevaUbicacion, [
+          destinoNavegacion.ubicacion.longitud,
+          destinoNavegacion.ubicacion.latitud,
+        ]);
         if (rutaActualizada) {
           setRutaNavegacion(rutaActualizada);
         }
@@ -105,13 +108,13 @@ export function useMapa(): EstadoMapa & AccionesMapa {
   };
 
   const centrarEnUnidad = (unidad: UnidadPolicial) => {
-    centrarCamara([unidad.longitud, unidad.latitud]);
+    centrarCamara([unidad.ubicacion.longitud, unidad.ubicacion.latitud]);
   };
 
   const navegarAUnidad = async (unidad: UnidadPolicial) => {
     if (!ubicacionActual) return;
 
-    const ruta = await navegacionService.obtenerRutaOSRM(ubicacionActual, [unidad.longitud, unidad.latitud]);
+    const ruta = await navegacionService.obtenerRutaOSRM(ubicacionActual, [unidad.ubicacion.longitud, unidad.ubicacion.latitud]);
     if (ruta) {
       setRutaNavegacion(ruta);
       setDestinoNavegacion(unidad);
