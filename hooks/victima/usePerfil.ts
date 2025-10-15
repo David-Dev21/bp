@@ -58,10 +58,11 @@ export function usePerfil() {
 
         if (victima.contactosEmergencia) {
           const contactosFormateados = victima.contactosEmergencia.map((contacto: ContactoEmergencia) => ({
+            id: contacto.id,
             parentesco: contacto.parentesco,
             nombre: contacto.nombreCompleto,
             telefono: contacto.celular,
-            esPrincipal: contacto.principal || true,
+            esPrincipal: contacto.principal || false,
           }));
           setContactosEmergencia(contactosFormateados);
         }

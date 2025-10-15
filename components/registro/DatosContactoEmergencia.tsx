@@ -1,34 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Platform, Pressable, ScrollView, Modal } from "react-native";
+import { View, ScrollView } from "react-native";
 import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
 import { usePerfilStore, ContactoEmergencia } from "~/stores/perfilStore";
-import { Badge } from "~/components/ui/badge";
 import { useSafeAreaInsetsWithFallback } from "~/hooks/useSafeAreaInsetsWithFallback";
-import ModalContactoEmergencia from "./ModalContactoEmergencia";
+import BottomSheetContactoEmergencia from "~/components/edicion/BottomSheetContactoEmergencia";
+import CampoPerfil from "~/components/perfil/CampoPerfil";
+import ModalOpcionesContacto from "~/components/edicion/ModalOpcionesContacto";
 import { useColorScheme } from "nativewind";
 import { THEME_COLORS } from "~/lib/theme";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "~/components/ui/alert-dialog";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 interface DatosContactoEmergenciaProps {
   pasoActual: number;
   totalPasos: number;
-  esEdicion?: boolean;
   onNavigate: (action: "prev" | "next" | "complete") => void;
   isLoading: boolean;
 }
 
-const DatosContactoEmergencia = ({ pasoActual, totalPasos, esEdicion, onNavigate, isLoading }: DatosContactoEmergenciaProps) => {
+const DatosContactoEmergencia = ({ pasoActual, totalPasos, onNavigate, isLoading }: DatosContactoEmergenciaProps) => {
   // Store global
   const { contactosEmergencia, setContactosEmergencia } = usePerfilStore();
 
@@ -39,98 +30,43 @@ const DatosContactoEmergencia = ({ pasoActual, totalPasos, esEdicion, onNavigate
   const { colorScheme } = useColorScheme();
   const colorIcono = THEME_COLORS[colorScheme === "dark" ? "dark" : "light"]["primary-foreground"];
 
-  const obtenerTituloPaso = () => {
-    const prefijo = esEdicion ? "Editar" : "";
-    return `${prefijo} Contactos de Emergencia`.trim();
-  };
-
-  // Estado local del modal
-  const [modalAbierto, setModalAbierto] = useState(false);
-  const [contactoTemporal, setContactoTemporal] = useState<ContactoEmergencia>({
-    parentesco: "",
-    nombre: "",
-    telefono: "",
-    esPrincipal: false,
-  });
+  // Estado para modales
+  const bottomSheetEmergenciaRef = useRef<BottomSheetModal>(null);
   const [editandoIndex, setEditandoIndex] = useState<number | null>(null);
   const [modalOpcionesAbierto, setModalOpcionesAbierto] = useState(false);
   const [contactoSeleccionado, setContactoSeleccionado] = useState<number | null>(null);
   const [mostrarConfirmacionEliminar, setMostrarConfirmacionEliminar] = useState(false);
 
-  const validarDatos = () => {
-    return (
-      contactosEmergencia.length > 0 &&
-      contactosEmergencia.every(
-        (contacto) => contacto.parentesco !== "" && contacto.nombre.trim() !== "" && contacto.telefono.trim() !== "" && contacto.telefono.length >= 8
-      )
-    );
-  };
-
-  const validarContactoTemporal = () => {
-    return (
-      contactoTemporal.parentesco !== "" &&
-      contactoTemporal.nombre.trim() !== "" &&
-      contactoTemporal.telefono.trim() !== "" &&
-      contactoTemporal.telefono.length >= 8
-    );
-  };
-
-  const abrirModal = (index?: number) => {
-    if (index !== undefined) {
-      setContactoTemporal({ ...contactosEmergencia[index] });
-      setEditandoIndex(index);
-    } else {
-      setContactoTemporal({ parentesco: "", nombre: "", telefono: "", esPrincipal: false });
-      setEditandoIndex(null);
-    }
-    setModalAbierto(true);
-  };
-
-  const cerrarModal = () => {
-    setModalAbierto(false);
-    setContactoTemporal({ parentesco: "", nombre: "", telefono: "", esPrincipal: false });
-    setEditandoIndex(null);
-  };
-
-  const guardarContacto = () => {
-    if (!validarContactoTemporal()) return;
-
+  // Funciones para manejar contactos
+  const guardarContacto = (data: { nombre: string; telefono: string; parentesco: string }) => {
     let nuevosContactos = [...contactosEmergencia];
 
     if (editandoIndex !== null) {
-      nuevosContactos[editandoIndex] = { ...contactoTemporal };
+      nuevosContactos[editandoIndex] = { ...nuevosContactos[editandoIndex], ...data };
     } else {
       // Si es el primer contacto, marcarlo como principal automáticamente
       const esPrimerContacto = nuevosContactos.length === 0;
-      nuevosContactos.push({ ...contactoTemporal, esPrincipal: esPrimerContacto });
+      nuevosContactos.push({ ...data, esPrincipal: esPrimerContacto });
     }
 
     setContactosEmergencia(nuevosContactos);
-    cerrarModal();
+    setEditandoIndex(null);
+    bottomSheetEmergenciaRef.current?.dismiss();
   };
 
-  const eliminarContacto = (index: number) => {
-    const contactoEliminadoEraPrincipal = contactosEmergencia[index].esPrincipal;
-    const nuevosContactos = contactosEmergencia.filter((_, i) => i !== index);
-
-    // Si el contacto eliminado era principal y quedan contactos, marcar el primero como principal
-    if (contactoEliminadoEraPrincipal && nuevosContactos.length > 0) {
-      nuevosContactos[0].esPrincipal = true;
-    }
-
-    setContactosEmergencia(nuevosContactos);
+  const editarContacto = (index: number) => {
+    setEditandoIndex(index);
+    bottomSheetEmergenciaRef.current?.present();
   };
 
-  const marcarComoPrincipal = (index: number) => {
-    const nuevosContactos = contactosEmergencia.map((contacto, i) => ({
-      ...contacto,
-      esPrincipal: i === index,
-    }));
-    setContactosEmergencia(nuevosContactos);
+  const agregarContacto = () => {
+    setEditandoIndex(null);
+    bottomSheetEmergenciaRef.current?.present();
   };
 
-  const actualizarContactoTemporal = (campo: keyof ContactoEmergencia, valor: string | boolean) => {
-    setContactoTemporal((prev) => ({ ...prev, [campo]: valor }));
+  const cerrarBottomSheetEmergencia = () => {
+    setEditandoIndex(null);
+    bottomSheetEmergenciaRef.current?.dismiss();
   };
 
   const abrirModalOpciones = (index: number) => {
@@ -140,41 +76,43 @@ const DatosContactoEmergencia = ({ pasoActual, totalPasos, esEdicion, onNavigate
 
   const cerrarModalOpciones = () => {
     setModalOpcionesAbierto(false);
-    // No limpiar contactoSeleccionado aquí porque puede estar en proceso de eliminación
   };
 
-  const ejecutarAccion = (accion: "editar" | "eliminar" | "principal") => {
+  const ejecutarEditar = () => {
+    if (contactoSeleccionado === null) return;
+    cerrarModalOpciones();
+    editarContacto(contactoSeleccionado);
+    setContactoSeleccionado(null);
+  };
+
+  const ejecutarEliminar = () => {
+    if (contactoSeleccionado === null || contactosEmergencia.length <= 1) return;
+    cerrarModalOpciones();
+    setMostrarConfirmacionEliminar(true);
+  };
+
+  const ejecutarMarcarPrincipal = () => {
     if (contactoSeleccionado === null) return;
 
-    switch (accion) {
-      case "editar":
-        cerrarModalOpciones();
-        abrirModal(contactoSeleccionado);
-        setContactoSeleccionado(null);
-        break;
-      case "eliminar":
-        // No permitir quitar si solo hay un contacto
-        if (contactosEmergencia.length <= 1) {
-          cerrarModalOpciones();
-          setContactoSeleccionado(null);
-          return;
-        }
-        cerrarModalOpciones();
-        // No limpiar contactoSeleccionado aquí, se limpia después de confirmar
-        setMostrarConfirmacionEliminar(true);
-        break;
-      case "principal":
-        marcarComoPrincipal(contactoSeleccionado);
-        cerrarModalOpciones();
-        setContactoSeleccionado(null);
-        break;
-    }
+    const nuevosContactos = contactosEmergencia.map((contacto, i) => ({
+      ...contacto,
+      esPrincipal: i === contactoSeleccionado,
+    }));
+    setContactosEmergencia(nuevosContactos);
+    cerrarModalOpciones();
+    setContactoSeleccionado(null);
   };
 
   const confirmarEliminarContacto = () => {
-    if (contactoSeleccionado !== null && contactosEmergencia.length > 1) {
-      eliminarContacto(contactoSeleccionado);
-    }
+    if (contactoSeleccionado === null) return;
+
+    const nuevosContactos = contactosEmergencia.filter((_, i) => i !== contactoSeleccionado);
+    setContactosEmergencia(nuevosContactos);
+    setMostrarConfirmacionEliminar(false);
+    setContactoSeleccionado(null);
+  };
+
+  const cancelarEliminarContacto = () => {
     setMostrarConfirmacionEliminar(false);
     setContactoSeleccionado(null);
   };
@@ -194,7 +132,7 @@ const DatosContactoEmergencia = ({ pasoActual, totalPasos, esEdicion, onNavigate
       >
         {/* Título */}
         <View>
-          <Text className="text-2xl font-bold text-center">{obtenerTituloPaso()}</Text>
+          <Text className="text-2xl font-bold text-center">Contactos de Emergencia</Text>
           <Text className="text-center text-muted-foreground mt-1 mb-2">
             Paso {pasoActual} de {totalPasos}
           </Text>
@@ -202,7 +140,7 @@ const DatosContactoEmergencia = ({ pasoActual, totalPasos, esEdicion, onNavigate
 
         <View className="flex-col gap-4">
           <View className="mx-auto">
-            <Button onPress={() => abrirModal()} variant={"secondary"} size={"sm"} disabled={contactosEmergencia.length >= 5}>
+            <Button onPress={agregarContacto} variant={"secondary"} size={"sm"} disabled={contactosEmergencia.length >= 5}>
               <View className="flex-row items-center gap-2">
                 <Ionicons name="person-add" size={16} color="#5a6a2f" />
                 <Text>Contacto</Text>
@@ -215,36 +153,18 @@ const DatosContactoEmergencia = ({ pasoActual, totalPasos, esEdicion, onNavigate
             <Text className="font-medium mb-2">Contactos agregados ({contactosEmergencia.length})</Text>
             {contactosEmergencia.length === 0 ? (
               <View className="border border-dashed border-muted-foreground/30 rounded-2xl p-4 bg-muted/20">
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-muted-foreground text-sm">Debe agregar al menos un contacto de emergencia</Text>
-                  <Ionicons name="person-outline" size={16} color="#9CA3AF" />
-                </View>
+                <Text className="text-muted-foreground text-sm">Debe agregar al menos un contacto de emergencia</Text>
               </View>
             ) : (
               <View>
-                {contactosEmergencia.map((item, index) => (
-                  <Pressable
+                {contactosEmergencia.map((contacto, index) => (
+                  <CampoPerfil
                     key={index}
+                    icono="person"
+                    etiqueta={`${contacto.nombre}`}
+                    valor={`${contacto.parentesco} - ${contacto.telefono}${contacto.esPrincipal ? " - Principal" : ""}`}
                     onPress={() => abrirModalOpciones(index)}
-                    className="rounded-2xl p-4 my-1 bg-secondary/30 active:bg-primary/20"
-                  >
-                    <View className="flex-1">
-                      <Text className="font-bold text-lg mb-2" numberOfLines={2}>
-                        {item.nombre}
-                      </Text>
-                      <View className="flex-row items-center gap-2">
-                        <Text className="text-sm text-muted-foreground capitalize">{item.parentesco}</Text>
-                        <Text className="text-muted-foreground">|</Text>
-                        <Text className="text-sm text-muted-foreground">{item.telefono}</Text>
-                        <Text className="text-muted-foreground">|</Text>
-                        {item.esPrincipal && (
-                          <Badge variant="default">
-                            <Text className="text-xs font-semibold">Principal</Text>
-                          </Badge>
-                        )}
-                      </View>
-                    </View>
-                  </Pressable>
+                  />
                 ))}
               </View>
             )}
@@ -265,76 +185,40 @@ const DatosContactoEmergencia = ({ pasoActual, totalPasos, esEdicion, onNavigate
           <View style={{ width: 100 }} />
         )}
 
-        <Button variant="default" onPress={() => onNavigate("complete")} disabled={isLoading}>
+        <Button variant="default" onPress={() => onNavigate("next")} disabled={isLoading || contactosEmergencia.length === 0}>
           <View className="flex-row items-center gap-2">
-            <Text>{isLoading ? "Guardando..." : "Guardar"}</Text>
-            <Ionicons name="save" size={20} color={colorIcono} />
+            <Text>Siguiente</Text>
+            <Ionicons name="arrow-forward" size={20} color={colorIcono} />
           </View>
         </Button>
       </View>
 
-      {/* Modal para agregar/editar contacto */}
-      <ModalContactoEmergencia
-        modalAbierto={modalAbierto}
-        setModalAbierto={setModalAbierto}
-        contactoTemporal={contactoTemporal}
-        actualizarContactoTemporal={actualizarContactoTemporal}
+      {/* BottomSheet de edición */}
+      <BottomSheetContactoEmergencia
+        bottomSheetRef={bottomSheetEmergenciaRef}
         guardarContacto={guardarContacto}
-        validarContactoTemporal={validarContactoTemporal}
         editandoIndex={editandoIndex}
+        onClose={cerrarBottomSheetEmergencia}
+        contactoActual={editandoIndex !== null ? contactosEmergencia[editandoIndex] : undefined}
       />
 
-      {/* Modal de opciones del contacto */}
-      <Modal visible={modalOpcionesAbierto} transparent animationType="fade" onRequestClose={cerrarModalOpciones}>
-        <Pressable className="flex-1 justify-center items-center bg-black/50" onPress={cerrarModalOpciones}>
-          <Pressable className="bg-background rounded-3xl w-[80%] shadow-2xl" onPress={(e) => e.stopPropagation()}>
-            {contactoSeleccionado !== null && !contactosEmergencia[contactoSeleccionado]?.esPrincipal && (
-              <Pressable
-                onPress={() => ejecutarAccion("principal")}
-                className="flex-row items-center gap-3 px-6 py-3 border-b border-border/50 active:bg-primary/10"
-              >
-                <Ionicons name="star" size={24} color="#FFD700" />
-                <Text className="text-base font-medium">Marcar como Principal</Text>
-              </Pressable>
-            )}
-            <Pressable
-              onPress={() => ejecutarAccion("editar")}
-              className="flex-row items-center gap-3 px-6 py-3 border-b border-border/50 active:bg-primary/10"
-            >
-              <Ionicons name="create" size={24} color="#6B7280" />
-              <Text className="text-base font-medium">Editar</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => ejecutarAccion("eliminar")}
-              className="flex-row items-center gap-3 px-6 py-3 active:bg-destructive/10"
-              disabled={contactosEmergencia.length <= 1}
-            >
-              <Ionicons name="close-circle" size={24} color={contactosEmergencia.length <= 1 ? "#9CA3AF" : "#DC2626"} />
-              <Text className={`text-base font-medium ${contactosEmergencia.length <= 1 ? "text-muted-foreground" : "text-destructive"}`}>
-                Quitar
-              </Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
-
-      {/* AlertDialog de confirmación para eliminar */}
-      <AlertDialog open={mostrarConfirmacionEliminar} onOpenChange={setMostrarConfirmacionEliminar}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Quitar contacto?</AlertDialogTitle>
-            <AlertDialogDescription>¿Está seguro que desea quitar este contacto de emergencia?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>
-              <Text>Cancelar</Text>
-            </AlertDialogCancel>
-            <AlertDialogAction onPress={confirmarEliminarContacto} className="bg-destructive active:bg-destructive/80">
-              <Text className="text-destructive-foreground">Quitar</Text>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Modal de opciones de contacto */}
+      <ModalOpcionesContacto
+        visible={modalOpcionesAbierto}
+        onClose={cerrarModalOpciones}
+        onEditar={ejecutarEditar}
+        onEliminar={ejecutarEliminar}
+        onMarcarPrincipal={ejecutarMarcarPrincipal}
+        esPrincipal={contactoSeleccionado !== null ? contactosEmergencia[contactoSeleccionado]?.esPrincipal || false : false}
+        permiteEliminar={contactosEmergencia.length > 1}
+        mostrarConfirmacionEliminar={mostrarConfirmacionEliminar}
+        onConfirmarEliminar={confirmarEliminarContacto}
+        onCancelarEliminar={cancelarEliminarContacto}
+        deleteText="Quitar"
+        confirmTitle="¿Quitar contacto?"
+        confirmDescription="¿Está seguro que desea quitar este contacto de emergencia?"
+        confirmActionText="Quitar"
+      />
     </View>
   );
 };

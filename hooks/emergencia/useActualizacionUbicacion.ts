@@ -1,102 +1,46 @@
-import { useState, useEffect, useRef } from "react";
-import { toast } from "sonner-native";
+import { useState, useEffect } from "react";
 import { useAlertaStore } from "~/stores/alertaStore";
-import { UbicacionService } from "~/services/ubicacionService";
-import { useUbicacionDispositivo } from "~/hooks/ubicacion/useUbicacionDispositivo";
+import { TareaUbicacionSegundoPlano } from "~/services/tareaUbicacionSegundoPlano";
 
 interface EstadoActualizacion {
   compartiendoUbicacion: boolean;
   error: string | null;
+  tareaSegundoPlanoActiva: boolean;
 }
 
 export function useActualizacionUbicacion() {
   const { idAlerta, estado } = useAlertaStore();
-  const { obtenerUbicacionActual } = useUbicacionDispositivo();
 
   const [estadoLocal, setEstadoLocal] = useState<EstadoActualizacion>({
     compartiendoUbicacion: false,
     error: null,
+    tareaSegundoPlanoActiva: false,
   });
 
-  const intervaloRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const debeEnviarRef = useRef<boolean>(false);
-
-  const enviarUbicacionActual = async () => {
-    // Verificar si debe enviar usando la referencia
-    if (!debeEnviarRef.current) {
-      return;
-    }
-
-    // Obtener estado actual del store
-    const estadoActual = useAlertaStore.getState();
-
-    if (!estadoActual.idAlerta) {
-      return;
-    }
-
-    // Verificar estado actual antes de enviar
-    if (estadoActual.estado === "EN_ATENCION") {
-      return;
-    }
-
-    try {
-      // Obtener ubicación actual
-      const ubicacion = await obtenerUbicacionActual();
-      if (!ubicacion) {
-        setEstadoLocal((prev) => ({ ...prev, error: "No se pudo obtener ubicación" }));
-        return;
-      }
-
-      // Formatear datos para el servicio
-      const datosUbicacion = {
-        idAlerta: estadoActual.idAlerta,
-        coordenadas: {
-          longitud: ubicacion.coords.longitude,
-          latitud: ubicacion.coords.latitude,
-        },
-      };
-
-      // Enviar al servidor
-      const resultado = await UbicacionService.enviarUbicacion(datosUbicacion);
-
-      if (!resultado.exito) {
-        const mensajeError = resultado.error ? `${resultado.mensaje} - ${resultado.error}` : resultado.mensaje;
-        setEstadoLocal((prev) => ({ ...prev, error: mensajeError }));
-      } else {
-        setEstadoLocal((prev) => ({ ...prev, error: null }));
-      }
-    } catch (error) {
-      const mensajeError = error instanceof Error ? error.message : "Error al enviar ubicación";
-      setEstadoLocal((prev) => ({ ...prev, error: mensajeError }));
-    }
-  };
-
-  const iniciarCompartirUbicacion = () => {
+  const iniciarCompartirUbicacion = async () => {
     if (!idAlerta) return;
 
-    debeEnviarRef.current = true;
     setEstadoLocal((prev) => ({ ...prev, compartiendoUbicacion: true }));
 
-    // Enviar ubicación inmediatamente
-    enviarUbicacionActual();
+    // Registrar tarea de segundo plano (funciona en primer y segundo plano)
+    const registrada = await TareaUbicacionSegundoPlano.registrarTarea();
+    setEstadoLocal((prev) => ({ ...prev, tareaSegundoPlanoActiva: registrada }));
 
-    // Configurar intervalo de 30 segundos
-    intervaloRef.current = setInterval(() => {
-      enviarUbicacionActual();
-    }, 30000); // 30 segundos
+    if (!registrada) {
+      setEstadoLocal((prev) => ({ ...prev, error: "No se pudo iniciar el envío de ubicación" }));
+    }
   };
 
-  const detenerCompartirUbicacion = () => {
-    // PRIMERO: Deshabilitar el envío
-    debeEnviarRef.current = false;
+  const detenerCompartirUbicacion = async () => {
+    // Desregistrar tarea de segundo plano
+    await TareaUbicacionSegundoPlano.desregistrarTarea();
 
-    // SEGUNDO: Limpiar el intervalo
-    if (intervaloRef.current) {
-      clearInterval(intervaloRef.current);
-      intervaloRef.current = null;
-    }
-
-    setEstadoLocal((prev) => ({ ...prev, compartiendoUbicacion: false, error: null }));
+    setEstadoLocal((prev) => ({
+      ...prev,
+      compartiendoUbicacion: false,
+      error: null,
+      tareaSegundoPlanoActiva: false,
+    }));
   };
 
   // Effect para manejar el estado de la alerta
@@ -113,16 +57,14 @@ export function useActualizacionUbicacion() {
       detenerCompartirUbicacion();
     }
 
-    // Cleanup al desmontar
-    return () => {
-      detenerCompartirUbicacion();
-    };
+    // NO limpiar al desmontar - la tarea debe seguir activa aunque cambies de pantalla
+    // Solo se detiene cuando la alerta se finaliza o pasa a EN_ATENCION
   }, [idAlerta, estado]);
 
   return {
     compartiendoUbicacion: estadoLocal.compartiendoUbicacion,
+    tareaSegundoPlanoActiva: estadoLocal.tareaSegundoPlanoActiva,
     error: estadoLocal.error,
-    enviarUbicacionActual,
     iniciarCompartirUbicacion,
     detenerCompartirUbicacion,
   };

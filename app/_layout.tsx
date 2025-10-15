@@ -3,9 +3,10 @@ import { DarkTheme, DefaultTheme, Theme, ThemeProvider } from "@react-navigation
 import { Link, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as React from "react";
-import { Appearance, Platform, Pressable, View } from "react-native";
+import { Appearance, Platform, Pressable, StatusBar, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Toaster } from "sonner-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { NAV_THEME, THEME_COLORS } from "~/lib/theme";
@@ -14,10 +15,10 @@ import { PortalHost } from "@rn-primitives/portal";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { obtenerIdDispositivo } from "~/lib/utils";
 import * as ScreenCapture from "expo-screen-capture";
-import { VistaProtegida } from "~/components/seguridad/VistaProtegida";
-import { useUbicacionDispositivo } from "~/hooks/ubicacion/useUbicacionDispositivo";
 import { CerrarSession } from "~/components/CerrarSession";
+import { useNotificaciones } from "~/hooks/useNotificaciones";
 import "~/global.css";
+import { useUbicacionStore } from "~/stores/ubicacionStore";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -31,7 +32,6 @@ const DARK_THEME: Theme = {
 export { ErrorBoundary } from "expo-router";
 
 const usePlatformSpecificSetup = Platform.select({
-  web: useSetWebBackgroundClassName,
   android: useSetAndroidNavigationBar,
   default: noop,
 });
@@ -41,14 +41,17 @@ export default function RootLayout() {
   const { colorScheme } = useColorScheme();
   const isDarkColorScheme = colorScheme === "dark";
   const tema = THEME_COLORS[isDarkColorScheme ? "dark" : "light"];
-  const { solicitarPermisos } = useUbicacionDispositivo();
+
+  // Inicializar configuración de notificaciones
+  useNotificaciones();
 
   // Inicializar ID del dispositivo al abrir la app
   React.useEffect(() => {
     obtenerIdDispositivo();
 
-    // Solicitar permisos de ubicación al iniciar la app
-    solicitarPermisos();
+    // Obtener ubicación actual al inicio
+    const { actualizarUbicacion } = useUbicacionStore.getState();
+    actualizarUbicacion();
 
     // Proteger contra capturas de pantalla
     const activarProteccionPantalla = async () => {
@@ -66,10 +69,10 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
-        <VistaProtegida>
+        <View style={{ flex: 1 }}>
           <SafeAreaProvider>
-            <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
-              <SafeAreaView edges={["bottom", "left", "right"]} style={{ flex: 1 }}>
+            <BottomSheetModalProvider>
+              <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
                 <Stack screenOptions={{ headerShown: false }}>
                   <Stack.Screen name="index" />
                   <Stack.Screen
@@ -77,31 +80,31 @@ export default function RootLayout() {
                     options={{
                       headerShown: true,
                       headerTitle: "",
-                      headerStyle: { backgroundColor: tema.primary },
-                      headerTintColor: tema["primary-foreground"],
+                      headerStyle: { backgroundColor: THEME_COLORS.light.primary },
+                      headerTintColor: THEME_COLORS.light["primary-foreground"],
                       headerLeft: () => (
                         <Link asChild href={"/perfil"}>
                           <Pressable>
-                            <Ionicons name="person-circle-outline" size={32} color={tema["primary-foreground"]} />
+                            <Ionicons name="person-circle-outline" size={32} color={THEME_COLORS.light["primary-foreground"]} />
                           </Pressable>
                         </Link>
                       ),
-                      headerRight: () => (
-                        <Pressable
-                          style={({ pressed }) => ({
-                            opacity: pressed ? 0.7 : 1,
-                          })}
-                        >
-                          <Ionicons name="information-circle-outline" size={32} color={tema["primary-foreground"]} />
-                        </Pressable>
-                      ),
+                      // headerRight: () => (
+                      //   <Pressable
+                      //     style={({ pressed }) => ({
+                      //       opacity: pressed ? 0.7 : 1,
+                      //     })}
+                      //   >
+                      //     <Ionicons name="information-circle-outline" size={32} color={THEME_COLORS.light["primary-foreground"]} />
+                      //   </Pressable>
+                      // ),
                     }}
                   />
                   <Stack.Screen
                     name="registro"
                     options={{
-                      headerStyle: { backgroundColor: tema.primary },
-                      headerTintColor: tema["primary-foreground"],
+                      headerStyle: { backgroundColor: THEME_COLORS.light.primary },
+                      headerTintColor: THEME_COLORS.light["primary-foreground"],
                       headerShown: true,
                       title: "",
                       headerBackTitle: "Volver",
@@ -110,8 +113,8 @@ export default function RootLayout() {
                   <Stack.Screen
                     name="informacion"
                     options={{
-                      headerStyle: { backgroundColor: tema.primary },
-                      headerTintColor: tema["primary-foreground"],
+                      headerStyle: { backgroundColor: THEME_COLORS.light.primary },
+                      headerTintColor: THEME_COLORS.light["primary-foreground"],
                       headerShown: true,
                       title: "Información",
                       headerBackTitle: "Volver",
@@ -120,8 +123,8 @@ export default function RootLayout() {
                   <Stack.Screen
                     name="perfil"
                     options={{
-                      headerStyle: { backgroundColor: tema.primary },
-                      headerTintColor: tema["primary-foreground"],
+                      headerStyle: { backgroundColor: THEME_COLORS.light.primary },
+                      headerTintColor: THEME_COLORS.light["primary-foreground"],
                       headerShown: true,
                       title: "PERFIL",
                       headerBackTitle: "Volver",
@@ -131,32 +134,35 @@ export default function RootLayout() {
                   <Stack.Screen
                     name="verificar-codigo"
                     options={{
-                      headerStyle: { backgroundColor: tema.primary },
-                      headerTintColor: tema["primary-foreground"],
+                      headerStyle: { backgroundColor: THEME_COLORS.light.primary },
+                      headerTintColor: THEME_COLORS.light["primary-foreground"],
                       headerShown: false,
                       title: "Solicitar Código",
                       headerBackTitle: "Volver",
                     }}
                   />
+                  <Stack.Screen
+                    name="editar-ubicacion"
+                    options={{
+                      presentation: "modal",
+                      headerStyle: { backgroundColor: THEME_COLORS.light.primary },
+                      headerTintColor: THEME_COLORS.light["primary-foreground"],
+                      headerShown: true,
+                      title: "EDITAR UBICACIÓN",
+                    }}
+                  />
                 </Stack>
-              </SafeAreaView>
-              <PortalHost />
-              <Toaster />
-            </ThemeProvider>
+                <StatusBar backgroundColor={THEME_COLORS.light.primary} barStyle="light-content" />
+                <PortalHost />
+                <Toaster />
+              </ThemeProvider>
+            </BottomSheetModalProvider>
           </SafeAreaProvider>
-        </VistaProtegida>
+        </View>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }
-const useIsomorphicLayoutEffect = Platform.OS === "web" && typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
-
-function useSetWebBackgroundClassName() {
-  useIsomorphicLayoutEffect(() => {
-    document.documentElement.classList.add("bg-background");
-  }, []);
-}
-
 function useSetAndroidNavigationBar() {
   React.useLayoutEffect(() => {
     setAndroidNavigationBar(Appearance.getColorScheme() ?? "light");

@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { THEME_COLORS } from "~/lib/theme";
 import { useAtenticacionStore } from "~/stores/atenticacionStore";
+import { usePerfilStore } from "~/stores/perfilStore";
 import { useRouter } from "expo-router";
 import {
   AlertDialog,
@@ -20,6 +21,7 @@ import { Text } from "~/components/ui/text";
 // Componente para el header right del perfil
 export function CerrarSession() {
   const { cerrarSesion } = useAtenticacionStore();
+  const { limpiarDatos } = usePerfilStore();
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const tema = THEME_COLORS[colorScheme === "dark" ? "dark" : "light"];
@@ -31,6 +33,8 @@ export function CerrarSession() {
 
   const confirmarCerrarSesion = () => {
     setMostrarDialogo(false);
+    // Limpiar todos los estados globales
+    limpiarDatos();
     cerrarSesion();
     router.replace("/");
   };
@@ -43,7 +47,7 @@ export function CerrarSession() {
           opacity: pressed ? 0.7 : 1,
         })}
       >
-        <Ionicons name="log-out" size={24} color={tema["primary-foreground"]} />
+        <Ionicons name="log-out" size={24} color={tema["primary"]} />
       </Pressable>
 
       <AlertDialog open={mostrarDialogo}>

@@ -5,10 +5,12 @@ import { THEME_COLORS } from "~/lib/theme";
 import { useColorScheme } from "nativewind";
 import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsetsWithFallback } from "~/hooks/useSafeAreaInsetsWithFallback";
 
 export default function TabsLayout() {
   const { colorScheme } = useColorScheme();
   const tema = THEME_COLORS[colorScheme === "dark" ? "dark" : "light"];
+  const insets = useSafeAreaInsetsWithFallback();
 
   const TabLabel = ({ focused, titulo }: { focused: boolean; titulo: string }) => (
     <Text style={{ fontSize: 12, fontWeight: focused ? "bold" : "normal", color: focused ? tema.primary : tema["muted-foreground"] }}>{titulo}</Text>
@@ -16,7 +18,7 @@ export default function TabsLayout() {
 
   return (
     <>
-      <StatusBar style={colorScheme === "dark" ? "dark" : "light"} backgroundColor={tema.primary} />
+      <StatusBar style="light" backgroundColor={THEME_COLORS.light.primary} />
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -25,10 +27,9 @@ export default function TabsLayout() {
             height: 75,
             backgroundColor: tema.background,
             borderTopWidth: 0,
-            position: "absolute",
             left: 0,
             right: 0,
-            bottom: 0,
+            bottom: insets.bottom,
           },
           tabBarActiveTintColor: tema.primary,
           tabBarInactiveTintColor: tema["muted-foreground"],
@@ -49,7 +50,7 @@ export default function TabsLayout() {
                   borderTopColor: focused ? tema.primary : "transparent",
                   width: 60,
                   alignItems: "center",
-                  marginTop: -8,
+                  marginTop: -5,
                   paddingTop: 4,
                 }}
               >
@@ -70,7 +71,7 @@ export default function TabsLayout() {
                   borderTopColor: focused ? tema.primary : "transparent",
                   width: 60,
                   alignItems: "center",
-                  marginTop: -8,
+                  marginTop: -5,
                   paddingTop: 4,
                 }}
               >
@@ -91,7 +92,7 @@ export default function TabsLayout() {
                   borderTopColor: focused ? tema.primary : "transparent",
                   width: 60,
                   alignItems: "center",
-                  marginTop: -8,
+                  marginTop: -5,
                   paddingTop: 4,
                 }}
               >

@@ -27,7 +27,7 @@ export function useBotonPanico(configuracion: ConfiguracionTiempos = { tiempoEsp
   const { enviarAlertaEmergencia, solicitarCancelacionAlerta, enviandoAlerta, alertaEstaActiva, cancelacionSolicitada } = useEmergencia();
 
   const { verificarEstadoAlerta, limpiarAlerta } = useAlertaStore();
-  const { compartiendoUbicacion } = useActualizacionUbicacion();
+  const { compartiendoUbicacion, tareaSegundoPlanoActiva } = useActualizacionUbicacion();
 
   const [estadoBoton, setEstadoBoton] = useState<EstadoBoton>({
     primerToque: false,
@@ -235,6 +235,7 @@ export function useBotonPanico(configuracion: ConfiguracionTiempos = { tiempoEsp
     alertaEstaActiva,
     cancelacionSolicitada,
     compartiendoUbicacion,
+    tareaSegundoPlanoActiva,
     estadoBoton,
     botonDeshabilitado,
     dialogoEstadoAlerta,

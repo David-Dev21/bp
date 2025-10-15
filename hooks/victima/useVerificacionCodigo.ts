@@ -6,12 +6,15 @@ import { CodigoService } from "~/services/codigoService";
 import { VictimaService } from "~/services/victimaService";
 import { useAtenticacionStore } from "~/stores/atenticacionStore";
 import { usePerfilStore } from "~/stores/perfilStore";
-import { obtenerExpoPushToken } from "~/lib/utils";
+import { useFcmToken } from "~/hooks/useFcmToken";
+import * as Device from "expo-device";
+import Constants from "expo-constants";
 
 export function useVerificacionCodigo() {
   const router = useRouter();
   const { setUsuario } = useAtenticacionStore();
   const { obtenerDatosCompletos } = usePerfilStore();
+  const { obtenerTokenActual } = useFcmToken();
 
   const [codigo, setCodigo] = useState("");
   const [codigoEnviado, setCodigoEnviado] = useState(false);
@@ -62,7 +65,7 @@ export function useVerificacionCodigo() {
 
         // Activar cuenta con dispositivo y tokens
         const storedId = await AsyncStorage.getItem("id_dispositivo");
-        const fcmToken = await obtenerExpoPushToken();
+        const fcmToken = await obtenerTokenActual();
         const idVictima = useAtenticacionStore.getState().idVictima;
 
         if (!storedId || !idVictima) {
@@ -74,6 +77,12 @@ export function useVerificacionCodigo() {
           await VictimaService.actualizarCuenta(idVictima, {
             idDispositivo: storedId,
             fcmToken: fcmToken || "",
+            infoDispositivo: {
+              marca: Device.brand || "Desconocido",
+              modelo: Device.modelName || "Desconocido",
+              versionSO: Device.osVersion || "Desconocido",
+              versionApp: Constants.nativeAppVersion || "1.0.0",
+            },
           });
         } catch (updateError) {
           toast.error("No se pudo activar tu cuenta. Verifica tu conexión e intenta nuevamente.");

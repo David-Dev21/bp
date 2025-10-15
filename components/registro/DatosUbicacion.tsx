@@ -10,40 +10,34 @@ import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { Ionicons } from "@expo/vector-icons";
 import { usePerfilStore } from "~/stores/perfilStore";
-import { useSafeAreaInsetsWithFallback } from "~/hooks/useSafeAreaInsetsWithFallback";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
 import { THEME_COLORS } from "~/lib/theme";
 import { useUbicacionGeoServer } from "~/hooks/ubicacion/useUbicacionGeoServer";
-import { zonaSchema, calleSchema } from "~/lib/zodSchemas";
+import { zonaSchema, calleSchema, numeroViviendaSchema, referenciaSchema } from "~/lib/zodSchemas";
 import { toast } from "sonner-native";
+import { useActualizarUbicacion } from "~/hooks/victima/useActualizarUbicacion";
 
 interface DatosUbicacionProps {
-  pasoActual: number;
-  totalPasos: number;
+  pasoActual?: number;
+  totalPasos?: number;
   esEdicion?: boolean;
-  onNavigate: (action: "prev" | "next" | "complete") => void;
+  onNavigate?: (action: "prev" | "next" | "complete") => void;
 }
 
 const DatosUbicacion = ({ pasoActual, totalPasos, esEdicion, onNavigate }: DatosUbicacionProps) => {
-  // Store global
   const { datosUbicacion, setDatosUbicacion } = usePerfilStore();
-
-  // Safe area insets con fallback
-  const espaciosSeguro = useSafeAreaInsetsWithFallback();
-
-  // Color scheme para modo oscuro
   const { colorScheme } = useColorScheme();
   const colorIcono = THEME_COLORS[colorScheme === "dark" ? "dark" : "light"]["primary-foreground"];
-
-  // Hook para obtener ubicación GPS
   const { ubicacionGeoServer, cargando } = useUbicacionGeoServer();
+  const { actualizarUbicacion, isUpdating } = useActualizarUbicacion();
 
   // Schema de validación
   const ubicacionSchema = z.object({
     zona: zonaSchema,
     calle: calleSchema,
-    numero: z.string().optional(),
-    referencia: z.string().optional(),
+    numero: numeroViviendaSchema,
+    referencia: referenciaSchema,
   });
 
   type FormData = z.infer<typeof ubicacionSchema>;
@@ -63,47 +57,60 @@ const DatosUbicacion = ({ pasoActual, totalPasos, esEdicion, onNavigate }: Datos
     mode: "onChange",
   });
 
-  const obtenerTituloPaso = () => {
-    const prefijo = esEdicion ? "Editar" : "";
-    return `${prefijo} Datos Ubicación`.trim();
-  };
+  const onSubmit = async (data: FormData) => {
+    const direccion = {
+      zona: data.zona,
+      calle: data.calle,
+      numero: data.numero || "",
+      referencia: data.referencia || "",
+    };
 
-  const onSubmit = (data: FormData) => {
-    if (!datosUbicacion.idMunicipio || !datosUbicacion.municipio) {
-      toast.error("Por favor obtén tu ubicación por GPS");
-      return;
+    if (esEdicion) {
+      // Validar que haya idMunicipio
+      if (!datosUbicacion.idMunicipio) {
+        toast.error("Debe obtener la ubicación GPS antes de guardar");
+        return;
+      }
+
+      // Actualizar en la base de datos
+      const exito = await actualizarUbicacion(direccion, parseInt(datosUbicacion.idMunicipio));
+      if (exito && onNavigate) {
+        onNavigate("complete");
+      }
+    } else {
+      // Solo actualizar store local durante registro
+      setDatosUbicacion({
+        ...datosUbicacion,
+        direccion,
+      });
+
+      if (onNavigate) {
+        onNavigate("next");
+      }
     }
-
-    setDatosUbicacion({
-      direccion: {
-        zona: data.zona,
-        calle: data.calle,
-        numero: data.numero || "",
-        referencia: data.referencia || "",
-      },
-    });
-
-    onNavigate("next");
   };
 
   return (
-    <View className="flex-1">
+    <>
       <KeyboardAwareScrollView
-        bottomOffset={100}
+        bottomOffset={120}
         className="flex-1"
         contentContainerStyle={{
           paddingHorizontal: 24,
-          paddingTop: 20,
+          paddingTop: esEdicion ? 10 : 20,
+          paddingBottom: 120,
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Título */}
-        <View>
-          <Text className="text-2xl font-bold text-center">{obtenerTituloPaso()}</Text>
-          <Text className="text-center text-muted-foreground mt-1 mb-2">
-            Paso {pasoActual} de {totalPasos}
-          </Text>
-        </View>
+        {/* Título - solo mostrar cuando no es edición */}
+        {!esEdicion && (
+          <View>
+            <Text className="text-2xl font-bold text-center">Datos Ubicación</Text>
+            <Text className="text-center text-muted-foreground mt-1 mb-2">
+              Paso {pasoActual} de {totalPasos}
+            </Text>
+          </View>
+        )}
 
         <View className="flex-col gap-4">
           <View>
@@ -127,21 +134,23 @@ const DatosUbicacion = ({ pasoActual, totalPasos, esEdicion, onNavigate }: Datos
           </View>
 
           <View>
-            <Label>Número</Label>
+            <Label>Número *</Label>
             <Controller
               control={control}
               name="numero"
               render={({ field: { onChange, value } }) => <Input value={value} onChangeText={onChange} placeholder="Ej: 1234" />}
             />
+            {errors.numero && <Text className="text-destructive text-xs mt-1">{errors.numero.message}</Text>}
           </View>
 
           <View>
-            <Label>Referencia</Label>
+            <Label>Referencia *</Label>
             <Controller
               control={control}
               name="referencia"
               render={({ field: { onChange, value } }) => <Input value={value} onChangeText={onChange} placeholder="Ej: Frente al Hospital Obrero" />}
             />
+            {errors.referencia && <Text className="text-destructive text-xs mt-1">{errors.referencia.message}</Text>}
           </View>
           {/* Componente para obtener ubicación por GPS */}
           <View>
@@ -174,25 +183,32 @@ const DatosUbicacion = ({ pasoActual, totalPasos, esEdicion, onNavigate }: Datos
       </KeyboardAwareScrollView>
 
       {/* Botones de navegación sticky */}
-      <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
-        <View className="flex-row justify-between items-center px-6 py-4 bg-background border-t border-border">
-          {/* Paso 2 siempre tiene botón anterior */}
-          <Button variant="default" onPress={() => onNavigate("prev")}>
-            <View className="flex-row items-center gap-2">
-              <Ionicons name="arrow-back" size={20} color={colorIcono} />
-              <Text>Anterior</Text>
-            </View>
-          </Button>
+      <KeyboardStickyView offset={{ closed: Platform.OS === "ios" ? 0 : -40, opened: Platform.OS === "android" ? 0 : 10 }}>
+        <View className="flex-row justify-between items-center px-6 bg-background py-2">
+          {/* Botón anterior solo si no es edición */}
+          {!esEdicion && (
+            <Button variant="default" onPress={() => onNavigate?.("prev")}>
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="arrow-back" size={20} color={colorIcono} />
+                <Text>Anterior</Text>
+              </View>
+            </Button>
+          )}
 
-          <Button variant="default" onPress={handleSubmit(onSubmit)} disabled={!isValid}>
+          <Button
+            variant="default"
+            onPress={handleSubmit(onSubmit)}
+            disabled={!isValid || !datosUbicacion.municipio || isUpdating || (esEdicion && !datosUbicacion.idMunicipio)}
+            className="ml-auto"
+          >
             <View className="flex-row items-center gap-2">
-              <Text>Siguiente</Text>
-              <Ionicons name="arrow-forward" size={20} color={colorIcono} />
+              <Text>{isUpdating ? "Guardando..." : esEdicion ? "Guardar" : "Siguiente"}</Text>
+              <Ionicons name={esEdicion ? "save" : "arrow-forward"} size={20} color={colorIcono} />
             </View>
           </Button>
         </View>
       </KeyboardStickyView>
-    </View>
+    </>
   );
 };
 

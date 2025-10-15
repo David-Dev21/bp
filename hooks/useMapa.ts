@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, RefObject } from "react";
 import { CameraRef } from "@maplibre/maplibre-react-native";
 import { UnidadPolicial } from "~/lib/tiposApi";
-import { useUbicacionDispositivo } from "~/hooks/ubicacion/useUbicacionDispositivo";
+import { useUbicacionStore } from "~/stores/ubicacionStore";
 import { navegacionService, RutaNavegacion } from "~/services/navegacionService";
 
 interface GeoJsonFeature {
@@ -33,7 +33,7 @@ export interface AccionesMapa {
 }
 
 export function useMapa(): EstadoMapa & AccionesMapa {
-  const { obtenerUbicacionActual } = useUbicacionDispositivo();
+  const { ubicacionActual: ubicacionStore, cargando: cargandoStore, error: errorStore, actualizarUbicacion } = useUbicacionStore();
   const cameraRef = useRef<CameraRef | null>(null);
 
   const [ubicacionActual, setUbicacionActual] = useState<[number, number] | null>(null);
@@ -42,24 +42,27 @@ export function useMapa(): EstadoMapa & AccionesMapa {
   const [rutaNavegacion, setRutaNavegacion] = useState<RutaNavegacion | null>(null);
   const [destinoNavegacion, setDestinoNavegacion] = useState<UnidadPolicial | null>(null);
 
+  // Sincronizar con el store global
   useEffect(() => {
-    cargarUbicacionInicial();
-  }, []);
-
-  const cargarUbicacionInicial = async () => {
-    setCargando(true);
-    setError(null);
-    const ubicacion = await obtenerUbicacionActual();
-    if (ubicacion) {
-      setUbicacionActual([ubicacion.coords.longitude, ubicacion.coords.latitude]);
+    if (ubicacionStore) {
+      setUbicacionActual([ubicacionStore.coords.longitude, ubicacionStore.coords.latitude]);
+      setCargando(cargandoStore);
+      setError(errorStore);
     } else {
-      setError("No se pudo obtener tu ubicación");
+      setCargando(cargandoStore);
+      setError(errorStore);
     }
-    setCargando(false);
-  };
+  }, [ubicacionStore, cargandoStore, errorStore]);
+
+  useEffect(() => {
+    if (!ubicacionActual && !cargandoStore) {
+      // Si no hay ubicación, intentar cargar
+      actualizarUbicacion();
+    }
+  }, [ubicacionActual, cargandoStore, actualizarUbicacion]);
 
   const recargar = async () => {
-    await cargarUbicacionInicial();
+    await actualizarUbicacion();
   };
 
   const centrarCamara = (coordenadas: [number, number], zoom = 15) => {
@@ -81,10 +84,13 @@ export function useMapa(): EstadoMapa & AccionesMapa {
       }
     }
 
-    // Obtener ubicación actual más reciente
-    const ubicacion = await obtenerUbicacionActual();
-    if (ubicacion) {
-      const nuevaUbicacion: [number, number] = [ubicacion.coords.longitude, ubicacion.coords.latitude];
+    // Actualizar ubicación actual
+    await actualizarUbicacion();
+
+    // Usar la ubicación actualizada del store
+    const ubicacionStore = useUbicacionStore.getState().ubicacionActual;
+    if (ubicacionStore) {
+      const nuevaUbicacion: [number, number] = [ubicacionStore.coords.longitude, ubicacionStore.coords.latitude];
       setUbicacionActual(nuevaUbicacion);
       centrarCamara(nuevaUbicacion);
 

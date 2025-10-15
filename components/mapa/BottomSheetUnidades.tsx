@@ -5,6 +5,7 @@ import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { Text } from "~/components/ui/text";
 import { Badge } from "~/components/ui/badge";
 import { UnidadPolicial } from "~/lib/tiposApi";
+import { THEME_COLORS } from "~/lib/theme";
 
 interface BottomSheetUnidadesProps {
   unidades: UnidadPolicial[];
@@ -16,14 +17,16 @@ interface BottomSheetUnidadesProps {
 export const BottomSheetUnidades = memo(function BottomSheetUnidades({ unidades, colorScheme, tema, onUnidadPress }: BottomSheetUnidadesProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["20%", "50%"], []);
+  const isDark = colorScheme === "dark";
+  const themeColors = THEME_COLORS[isDark ? "dark" : "light"];
 
   return (
     <BottomSheet
       ref={bottomSheetRef}
       index={0}
       snapPoints={snapPoints}
-      backgroundStyle={{ backgroundColor: colorScheme === "dark" ? "#1f2937" : "#ffffff" }}
-      handleIndicatorStyle={{ backgroundColor: colorScheme === "dark" ? "#6b7280" : "#d1d5db" }}
+      backgroundStyle={{ backgroundColor: themeColors.card }}
+      handleIndicatorStyle={{ backgroundColor: themeColors.border }}
       enablePanDownToClose={false}
       enableOverDrag={false}
       animateOnMount={false}
@@ -51,10 +54,10 @@ export const BottomSheetUnidades = memo(function BottomSheetUnidades({ unidades,
               <View
                 className="w-8 h-8 rounded-full items-center justify-center mt-1"
                 style={{
-                  backgroundColor: `${tema.primary}20`,
+                  backgroundColor: `${themeColors.primary}20`,
                 }}
               >
-                <Ionicons name="shield" size={16} color={tema.primary} />
+                <Ionicons name="shield" size={16} color={themeColors.primary} />
               </View>
               <View className="flex-1">
                 <Text className="font-semibold text-sm flex-1">{unidad.nombre}</Text>

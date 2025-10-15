@@ -39,6 +39,7 @@ export const useAtenticacionStore = create<EstadoSesion>()(
       cerrarSesion: () => {
         set({
           sesionActiva: false,
+          codigoDenuncia: null,
         });
       },
     }),

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Pressable } from "react-native";
+import { View, Pressable, Platform } from "react-native";
 import { KeyboardAwareScrollView, KeyboardStickyView } from "react-native-keyboard-controller";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,16 +15,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { THEME_COLORS } from "~/lib/theme";
 import { nombresSchema, apellidosSchema, celularSchema, correoSchema, fechaNacimientoSchema } from "~/lib/zodSchemas";
-import { toast } from "sonner-native";
 
 interface DatosPersonalesProps {
-  pasoActual?: number;
-  totalPasos?: number;
-  esEdicion?: boolean;
-  onNavigate?: (action: "prev" | "next" | "complete") => void;
+  pasoActual: number;
+  totalPasos: number;
+  onNavigate: (action: "prev" | "next" | "complete") => void;
 }
 
-const DatosPersonales = ({ pasoActual, totalPasos, esEdicion, onNavigate }: DatosPersonalesProps) => {
+const DatosPersonales = ({ pasoActual, totalPasos, onNavigate }: DatosPersonalesProps) => {
   // Store global
   const { datosPersonales, setDatosPersonales } = usePerfilStore();
 
@@ -47,22 +45,20 @@ const DatosPersonales = ({ pasoActual, totalPasos, esEdicion, onNavigate }: Dato
     control,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors, isValid },
   } = useForm<FormData>({
     resolver: zodResolver(datosPersonalesSchema),
     defaultValues: {
-      nombres: datosPersonales.nombres,
-      apellidos: datosPersonales.apellidos,
-      celular: datosPersonales.celular,
-      correo: datosPersonales.correo,
-      fechaNacimiento: datosPersonales.fechaNacimiento,
+      nombres: datosPersonales.nombres || "",
+      apellidos: datosPersonales.apellidos || "",
+      celular: datosPersonales.celular || "",
+      correo: datosPersonales.correo || "",
+      fechaNacimiento: datosPersonales.fechaNacimiento || "", // Vacío por defecto
     },
     mode: "onChange",
   });
 
   // Estados locales para el DateTimePicker
-  const fechaNacimientoValue = watch("fechaNacimiento");
   const [fechaNacimiento, setFechaNacimiento] = useState<Date | null>(() => {
     if (datosPersonales.fechaNacimiento) {
       return new Date(datosPersonales.fechaNacimiento);
@@ -81,9 +77,7 @@ const DatosPersonales = ({ pasoActual, totalPasos, esEdicion, onNavigate }: Dato
   const onSubmit = (data: FormData) => {
     setDatosPersonales(data);
 
-    if (esEdicion) {
-      toast.success("Datos actualizados correctamente");
-    } else if (onNavigate) {
+    if (onNavigate) {
       onNavigate("next");
     }
   };
@@ -96,23 +90,18 @@ const DatosPersonales = ({ pasoActual, totalPasos, esEdicion, onNavigate }: Dato
     setMostrarDatePicker(true);
   };
 
-  const obtenerTituloPaso = () => {
-    const prefijo = esEdicion ? "Editar" : "";
-    return `${prefijo} Datos Personales`.trim();
-  };
-
   return (
-    <View className="flex-1">
+    <>
       <KeyboardAwareScrollView
-        bottomOffset={100}
+        bottomOffset={120}
         contentContainerStyle={{
           padding: 20,
+          paddingBottom: 120,
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Título */}
         <View>
-          <Text className="text-2xl font-bold text-center mb-2">{obtenerTituloPaso()}</Text>
+          <Text className="text-2xl font-bold text-center mb-2">Datos Personales</Text>
           {pasoActual && totalPasos && (
             <Text className="text-center text-muted-foreground">
               Paso {pasoActual} de {totalPasos}
@@ -189,12 +178,12 @@ const DatosPersonales = ({ pasoActual, totalPasos, esEdicion, onNavigate }: Dato
       </KeyboardAwareScrollView>
 
       {/* Botones de navegación sticky */}
-      <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
-        <View className="flex-row justify-end items-center px-6 py-4 bg-background border-t border-border">
+      <KeyboardStickyView offset={{ closed: Platform.OS === "ios" ? 0 : -40, opened: Platform.OS === "android" ? 0 : 10 }}>
+        <View className="flex-row justify-end px-6 bg-background py-2">
           <Button variant="default" onPress={handleSubmit(onSubmit)} disabled={!isValid}>
             <View className="flex-row items-center gap-2">
-              <Text>{esEdicion ? "Guardar" : "Siguiente"}</Text>
-              <Ionicons name={esEdicion ? "save" : "arrow-forward"} size={20} color={colorIcono} />
+              <Text>Siguiente</Text>
+              <Ionicons name="arrow-forward" size={20} color={colorIcono} />
             </View>
           </Button>
         </View>
@@ -215,7 +204,7 @@ const DatosPersonales = ({ pasoActual, totalPasos, esEdicion, onNavigate }: Dato
         locale="es"
         theme={colorScheme === "dark" ? "dark" : "light"}
       />
-    </View>
+    </>
   );
 };
 

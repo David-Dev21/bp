@@ -5,6 +5,7 @@ import { usePerfilStore } from "~/stores/perfilStore";
 import DatosPersonales from "~/components/registro/DatosPersonales";
 import DatosUbicacion from "~/components/registro/DatosUbicacion";
 import DatosContactoEmergencia from "~/components/registro/DatosContactoEmergencia";
+import TerminosCondiciones from "~/components/registro/TerminosCondiciones";
 
 export default function PantallaRegistro() {
   // Hook para registro
@@ -15,7 +16,7 @@ export default function PantallaRegistro() {
 
   // Estado del wizard
   const [pasoActual, setPasoActual] = useState(1);
-  const totalPasos = 3;
+  const totalPasos = 4; // Ahora son 4 pasos
 
   // Navegación simplificada
   const handleNavigate = (action: "prev" | "next" | "complete") => {
@@ -74,9 +75,10 @@ export default function PantallaRegistro() {
       {pasoActual === 2 && <DatosUbicacion pasoActual={pasoActual} totalPasos={totalPasos} onNavigate={handleNavigate} />}
 
       {/* PASO 3: CONTACTOS DE EMERGENCIA */}
-      {pasoActual === 3 && (
-        <DatosContactoEmergencia pasoActual={pasoActual} totalPasos={totalPasos} onNavigate={handleNavigate} isLoading={isLoading} />
-      )}
+      {pasoActual === 3 && <DatosContactoEmergencia pasoActual={pasoActual} totalPasos={totalPasos} onNavigate={handleNavigate} isLoading={false} />}
+
+      {/* PASO 4: TÉRMINOS Y CONDICIONES */}
+      {pasoActual === 4 && <TerminosCondiciones pasoActual={pasoActual} totalPasos={totalPasos} onNavigate={handleNavigate} isLoading={isLoading} />}
     </View>
   );
 }

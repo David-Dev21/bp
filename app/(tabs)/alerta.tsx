@@ -18,11 +18,13 @@ import { ContenidoBotonEmergencia } from "~/components/emergencia/ContenidoBoton
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { THEME_COLORS } from "~/lib/theme";
+import { useSafeAreaInsetsWithFallback } from "~/hooks/useSafeAreaInsetsWithFallback";
 
 export default function BotonPanico() {
   const { colorScheme } = useColorScheme();
   const { estado } = useAlertaStore();
   const { codigoDenuncia } = useAtenticacionStore();
+  const insets = useSafeAreaInsetsWithFallback();
   const {
     alertaEstaActiva,
     cancelacionSolicitada,
@@ -47,9 +49,9 @@ export default function BotonPanico() {
   const colorIcono = THEME_COLORS[colorScheme === "dark" ? "dark" : "light"]["primary-foreground"];
 
   return (
-    <View className="flex-1 justify-center px-4 pb-20">
+    <View className="flex-1 justify-center px-4" style={{ paddingBottom: insets.bottom }}>
       {/* Título */}
-      <View className="mb-8">
+      <View className="mb-4">
         <Text className="text-2xl font-bold text-center text-foreground mb-2">
           {alertaEstaActiva ? "Alerta Activa" : `CUD: ${codigoDenuncia || "Sin código"}`}
         </Text>
@@ -61,7 +63,7 @@ export default function BotonPanico() {
       </View>
 
       {/* Botón de Emergencia */}
-      <View className="mb-8">
+      <View className="mb-4">
         <View className="items-center">
           <Pressable
             onPress={manejarToque}
@@ -102,12 +104,12 @@ export default function BotonPanico() {
         <Text className="text-center text-foreground/70 py-4 text-sm">{obtenerTextoEstado()}</Text>
 
         {/* Llamadas de emergencia */}
-        <View className="mt-6">
+        <View className="mt-4">
           <Text className="text-center text-sm text-muted-foreground mb-3">
             Llamadas de emergencia
             <Ionicons className="call" size={4} color={colorIcono} />
           </Text>
-          <View className="flex-row justify-between gap-2">
+          <View className="flex-row justify-center gap-4">
             <Button onPress={() => realizarLlamada("80014348")} variant="default">
               <Text className="font-medium">FELCV: 800 14 0348</Text>
             </Button>
@@ -119,7 +121,7 @@ export default function BotonPanico() {
       </View>
 
       <AlertDialog open={dialogoEstadoAlerta.mostrar}>
-        <AlertDialogContent>
+        <AlertDialogContent className="4/5">
           <AlertDialogHeader>
             <AlertDialogTitle>{dialogoEstadoAlerta.titulo}</AlertDialogTitle>
             <AlertDialogDescription>{dialogoEstadoAlerta.descripcion}</AlertDialogDescription>

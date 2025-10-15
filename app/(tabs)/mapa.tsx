@@ -55,8 +55,8 @@ export default memo(function Mapa() {
           logoEnabled={true}
           logoPosition={{ top: 8, left: 8 }}
           attributionEnabled={true}
-          attributionPosition={{ top: 8, right: 8 }}
-          mapStyle={colorScheme === "dark" ? "https://tiles.openfreemap.org/styles/dark" : "https://tiles.openfreemap.org/styles/liberty"}
+          attributionPosition={{ top: 6, left: 100 }}
+          mapStyle={"https://tiles.openfreemap.org/styles/liberty"}
         >
           {ubicacionActual && (
             <Camera

@@ -45,9 +45,26 @@ export class VictimaService {
   }
 
   // Actualizar cuenta de víctima
-  static async actualizarCuenta(idVictima: string, accountData: { idDispositivo: string; fcmToken: string }): Promise<RespuestaActualizarVictima> {
+  static async actualizarCuenta(
+    idVictima: string,
+    accountData: {
+      idDispositivo?: string;
+      fcmToken?: string;
+      infoDispositivo?: { marca: string; modelo: string; versionSO: string; versionApp: string };
+    }
+  ): Promise<RespuestaActualizarVictima> {
     const { apiKey } = useAtenticacionStore.getState();
     return await alertasApi.patch(`/victimas/${idVictima}/cuenta`, accountData, {
+      headers: {
+        "X-API-Key": apiKey,
+      },
+    });
+  }
+
+  // Actualizar información de contacto (celular y correo)
+  static async actualizarContacto(idVictima: string, contactoData: { celular?: string; correo?: string }): Promise<RespuestaActualizarVictima> {
+    const { apiKey } = useAtenticacionStore.getState();
+    return await alertasApi.patch(`/victimas/${idVictima}/contacto`, contactoData, {
       headers: {
         "X-API-Key": apiKey,
       },
@@ -103,5 +120,19 @@ export class VictimaService {
         "X-API-Key": apiKey,
       },
     });
+  }
+
+  // Marcar contacto como principal
+  static async marcarContactoPrincipal(idVictima: string, idContacto: string): Promise<any> {
+    const { apiKey } = useAtenticacionStore.getState();
+    return await alertasApi.patch(
+      `/victimas/${idVictima}/contactos/${idContacto}/principal`,
+      {},
+      {
+        headers: {
+          "X-API-Key": apiKey,
+        },
+      }
+    );
   }
 }

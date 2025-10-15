@@ -8,7 +8,7 @@ import { usePerfilStore } from "~/stores/perfilStore";
 export function useRegistro() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { limpiarDatos, datosPersonales } = usePerfilStore();
+  const { datosPersonales } = usePerfilStore();
 
   const handleRegistro = useCallback(
     async (datos: Partial<PerfilVictima>) => {
@@ -19,11 +19,9 @@ export function useRegistro() {
       setIsLoading(true);
       try {
         const result = await VictimaService.registrarVictima(datos as PerfilVictima);
-
         if (result.exito && result.datos?.victima.id) {
           const mensajeExito = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
           toast.success(mensajeExito);
-          limpiarDatos();
           // Navegar después de un pequeño delay
           setTimeout(() => {
             router.push("/verificar-codigo" as any);
@@ -36,7 +34,8 @@ export function useRegistro() {
         }
       } catch (error) {
         const mensajeError = error instanceof Error ? error.message : "Algo salió mal.";
-        return { exito: false, mensaje: mensajeError, codigo: 500 };
+        toast.error(mensajeError);
+        return;
       } finally {
         setIsLoading(false);
       }

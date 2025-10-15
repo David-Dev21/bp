@@ -13,11 +13,21 @@
       "backgroundColor": "#009688",
       "resizeMode": "contain"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "icon": "./assets/images/iconos/ios/AppIcon@3x.png",
-      "bundleIdentifier": "com.felcv.botonpanico"
+      "bundleIdentifier": "com.felcv.botonpanico",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "location",
+          "fetch",
+          "location",
+          "fetch"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +36,18 @@
         "backgroundColor": "#ffffff"
       },
       "icon": "./assets/images/iconos/android/res/mipmap-xxxhdpi/ic_launcher.png",
-      "permissions": ["android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION"],
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
+      ],
       "package": "com.felcv.botonpanico",
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan"
@@ -36,7 +57,10 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Esta aplicación necesita acceso a tu ubicación para mostrar tu posición en el mapa y enviar alertas de emergencia precisas."
+          "locationWhenInUsePermission": "Esta aplicación necesita acceso a tu ubicación para mostrar tu posición en el mapa y enviar alertas de emergencia precisas.",
+          "locationAlwaysAndWhenInUsePermission": "Esta aplicación necesita acceso continuo a tu ubicación para enviar tu posición durante emergencias, incluso cuando la app está en segundo plano.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isIosBackgroundLocationEnabled": true
         }
       ],
       "expo-notifications",
@@ -50,7 +74,14 @@
       "router": {},
       "eas": {
         "projectId": "25eb477d-40aa-4a10-927c-07847a4df6c9"
-      }
+      },
+      "EXPO_PUBLIC_ALERTAS_URL": "https://jupiter-guardian-api.policia.bo"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/25eb477d-40aa-4a10-927c-07847a4df6c9"
     }
   }
 }

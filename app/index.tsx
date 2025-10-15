@@ -28,7 +28,11 @@ export default function PaginaLogin() {
 
   useEffect(() => {
     if (montado && sesionActiva) {
-      router.replace("/alerta");
+      // Agregar delay para permitir que la navegación se restaure
+      const timer = setTimeout(() => {
+        router.replace("/alerta");
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [montado, sesionActiva, router]);
 
