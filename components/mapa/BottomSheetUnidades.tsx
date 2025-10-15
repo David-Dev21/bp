@@ -32,7 +32,7 @@ export const BottomSheetUnidades = memo(function BottomSheetUnidades({ unidades,
       animateOnMount={false}
       enableDynamicSizing={false}
     >
-      <View className="px-4 pb-4">
+      <View className="px-4 pb-8">
         <View className="flex-row items-center justify-between gap-2">
           <Text className="text-lg font-bold">Unidades Policiales Cercanas</Text>
           <Badge variant="secondary" className="mt-1">

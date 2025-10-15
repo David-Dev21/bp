@@ -33,11 +33,11 @@ export interface AccionesMapa {
 }
 
 export function useMapa(): EstadoMapa & AccionesMapa {
-  const { ubicacionActual: ubicacionStore, cargando: cargandoStore, error: errorStore, actualizarUbicacion } = useUbicacionStore();
+  const { ubicacionActual: ubicacionStore, error: errorStore, actualizarUbicacion } = useUbicacionStore();
   const cameraRef = useRef<CameraRef | null>(null);
 
   const [ubicacionActual, setUbicacionActual] = useState<[number, number] | null>(null);
-  const [cargando, setCargando] = useState(true);
+  const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rutaNavegacion, setRutaNavegacion] = useState<RutaNavegacion | null>(null);
   const [destinoNavegacion, setDestinoNavegacion] = useState<UnidadPolicial | null>(null);
@@ -46,20 +46,11 @@ export function useMapa(): EstadoMapa & AccionesMapa {
   useEffect(() => {
     if (ubicacionStore) {
       setUbicacionActual([ubicacionStore.coords.longitude, ubicacionStore.coords.latitude]);
-      setCargando(cargandoStore);
       setError(errorStore);
     } else {
-      setCargando(cargandoStore);
       setError(errorStore);
     }
-  }, [ubicacionStore, cargandoStore, errorStore]);
-
-  useEffect(() => {
-    if (!ubicacionActual && !cargandoStore) {
-      // Si no hay ubicación, intentar cargar
-      actualizarUbicacion();
-    }
-  }, [ubicacionActual, cargandoStore, actualizarUbicacion]);
+  }, [ubicacionStore, errorStore]);
 
   const recargar = async () => {
     await actualizarUbicacion();

@@ -22,7 +22,6 @@ export default memo(function Mapa() {
 
   const {
     ubicacionActual,
-    cargando,
     error,
     rutaNavegacion,
     destinoNavegacion,
@@ -36,15 +35,15 @@ export default memo(function Mapa() {
   } = useMapa();
 
   const { unidades, cargando: cargandoUnidades } = useUnidades(
-    ubicacionActual ? ubicacionActual[1] : undefined,
-    ubicacionActual ? ubicacionActual[0] : undefined
+    !rutaNavegacion && ubicacionActual ? ubicacionActual[1] : undefined,
+    !rutaNavegacion && ubicacionActual ? ubicacionActual[0] : undefined
   );
 
   const [unidadSeleccionada, setUnidadSeleccionada] = useState<UnidadPolicial | null>(null);
   const [dialogAbierto, setDialogAbierto] = useState(false);
 
-  if (cargando || cargandoUnidades) {
-    return <EstadoCarga tema={tema} mensaje={cargando ? "Obteniendo tu ubicación..." : "Cargando unidades policiales..."} />;
+  if (cargandoUnidades && !rutaNavegacion) {
+    return <EstadoCarga tema={tema} mensaje="Cargando unidades policiales..." />;
   }
 
   if (error || !ubicacionActual) {
@@ -121,7 +120,7 @@ export default memo(function Mapa() {
               }}
             >
               <View className="items-center justify-center">
-                <Ionicons name="shield" size={32} color={tema.primary} />
+                <Ionicons name="shield" size={32} color="#5a6a2f" />
               </View>
             </PointAnnotation>
           ))}

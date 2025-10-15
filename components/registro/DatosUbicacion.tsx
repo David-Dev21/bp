@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, Platform } from "react-native";
 import { KeyboardAwareScrollView, KeyboardStickyView } from "react-native-keyboard-controller";
 import { useForm, Controller } from "react-hook-form";
@@ -10,7 +10,6 @@ import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { Ionicons } from "@expo/vector-icons";
 import { usePerfilStore } from "~/stores/perfilStore";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
 import { THEME_COLORS } from "~/lib/theme";
 import { useUbicacionGeoServer } from "~/hooks/ubicacion/useUbicacionGeoServer";

@@ -6,11 +6,30 @@ import { useColorScheme } from "nativewind";
 import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsetsWithFallback } from "~/hooks/useSafeAreaInsetsWithFallback";
+import { useUbicacionStore } from "~/stores/ubicacionStore";
+import { Toaster } from "sonner-native";
 
 export default function TabsLayout() {
   const { colorScheme } = useColorScheme();
   const tema = THEME_COLORS[colorScheme === "dark" ? "dark" : "light"];
   const insets = useSafeAreaInsetsWithFallback();
+  const [ubicacionLista, setUbicacionLista] = React.useState(false);
+
+  // Obtener ubicación silenciosamente al entrar a las pestañas
+  React.useEffect(() => {
+    const obtenerUbicacion = async () => {
+      const { actualizarUbicacion } = useUbicacionStore.getState();
+      await actualizarUbicacion();
+      setUbicacionLista(true);
+    };
+
+    obtenerUbicacion();
+  }, []);
+
+  // No mostrar tabs hasta que la ubicación esté lista
+  if (!ubicacionLista) {
+    return null; // O un loading screen si quieres
+  }
 
   const TabLabel = ({ focused, titulo }: { focused: boolean; titulo: string }) => (
     <Text style={{ fontSize: 12, fontWeight: focused ? "bold" : "normal", color: focused ? tema.primary : tema["muted-foreground"] }}>{titulo}</Text>
@@ -102,6 +121,7 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
+      <Toaster />
     </>
   );
 }

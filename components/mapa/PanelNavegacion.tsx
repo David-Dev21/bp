@@ -16,7 +16,7 @@ export function PanelNavegacion({ rutaNavegacion, destinoNavegacion, colorScheme
   return (
     <View className={`absolute left-4 bottom-24 ${colorScheme === "dark" ? "bg-gray-800" : "bg-white"} py-3 px-4 rounded-3xl shadow-lg w-3/4`}>
       <View className="flex-row items-start justify-between">
-        <Text className="font-bold text-base flex-1">Navegando a {destinoNavegacion.nombre}</Text>
+        <Text className="font-bold text-sm flex-1">Ruta Inicial para {destinoNavegacion.unidad}</Text>
         <Pressable onPress={onCancelar} className="p-1">
           <Ionicons name="close" size={24} color={colorScheme === "dark" ? "#9ca3af" : "#6b7280"} />
         </Pressable>

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { toast } from "sonner-native";
@@ -22,9 +22,6 @@ export function useVerificacionCodigo() {
 
   const { datosPersonales } = obtenerDatosCompletos();
   const celular = datosPersonales.celular;
-
-  // Crear array de refs para los inputs
-  const inputRefs = Array.from({ length: 6 }, () => useRef<any>(null));
 
   const solicitarCodigo = async () => {
     if (!celular) {
@@ -106,40 +103,13 @@ export function useVerificacionCodigo() {
     }
   };
 
-  const handleInputChange = (text: string, index: number) => {
-    // Solo permitir números
-    const numericText = text.replace(/[^0-9]/g, "");
-
-    if (numericText.length > 1) return; // Solo un dígito por input
-
-    // Actualizar el código
-    const newCodigo = codigo.split("");
-    newCodigo[index] = numericText;
-    const updatedCodigo = newCodigo.join("");
-    setCodigo(updatedCodigo);
-
-    // Auto-focus al siguiente input si se ingresó un dígito
-    if (numericText && index < 5) {
-      inputRefs[index + 1].current?.focus();
-    }
-  };
-
-  const handleInputKeyPress = (key: string, index: number) => {
-    if (key === "Backspace" && !codigo[index] && index > 0) {
-      // Si se presiona backspace en un input vacío, ir al anterior
-      inputRefs[index - 1].current?.focus();
-    }
-  };
-
   return {
     codigo,
     codigoEnviado,
     isLoading,
     celular,
-    inputRefs,
     solicitarCodigo,
     verificarCodigo,
-    handleInputChange,
-    handleInputKeyPress,
+    setCodigo,
   };
 }

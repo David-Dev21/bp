@@ -49,10 +49,6 @@ export default function RootLayout() {
   React.useEffect(() => {
     obtenerIdDispositivo();
 
-    // Obtener ubicación actual al inicio
-    const { actualizarUbicacion } = useUbicacionStore.getState();
-    actualizarUbicacion();
-
     // Proteger contra capturas de pantalla
     const activarProteccionPantalla = async () => {
       await ScreenCapture.preventScreenCaptureAsync();
