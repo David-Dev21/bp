@@ -5,8 +5,8 @@ import * as Notifications from "expo-notifications";
 // Configurar el manejador de notificaciones
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: false,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
     shouldShowBanner: true,
     shouldShowList: true,
   }),
@@ -18,10 +18,12 @@ export const useNotificaciones = () => {
     const configurarCanalAndroid = async () => {
       if (Platform.OS === "android") {
         await Notifications.setNotificationChannelAsync("default", {
-          name: "default",
-          importance: Notifications.AndroidImportance.MAX,
+          name: "Notificaciones de Emergencia",
+          importance: Notifications.AndroidImportance.HIGH,
           vibrationPattern: [0, 250, 250, 250],
           lightColor: "#FF231F7C",
+          sound: "default",
+          showBadge: true,
         });
       }
     };

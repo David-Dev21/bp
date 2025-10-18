@@ -37,7 +37,6 @@ export default function TabsLayout() {
 
   return (
     <>
-      <StatusBar style="light" backgroundColor={THEME_COLORS.light.primary} />
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -121,7 +120,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
-      <Toaster />
     </>
   );
 }

@@ -3,7 +3,8 @@ import { DarkTheme, DefaultTheme, Theme, ThemeProvider } from "@react-navigation
 import { Link, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as React from "react";
-import { Appearance, Platform, Pressable, StatusBar, View } from "react-native";
+import { Appearance, Platform, Pressable, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -18,7 +19,6 @@ import * as ScreenCapture from "expo-screen-capture";
 import { CerrarSession } from "~/components/CerrarSession";
 import { useNotificaciones } from "~/hooks/useNotificaciones";
 import "~/global.css";
-import { useUbicacionStore } from "~/stores/ubicacionStore";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -148,7 +148,7 @@ export default function RootLayout() {
                     }}
                   />
                 </Stack>
-                <StatusBar backgroundColor={THEME_COLORS.light.primary} barStyle="light-content" />
+                <StatusBar style="light" />
                 <PortalHost />
                 <Toaster />
               </ThemeProvider>
