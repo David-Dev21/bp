@@ -1,9 +1,8 @@
-import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
-import { Text } from '~/components/ui/text';
+import React from "react";
+import { View } from "react-native";
+import { Text } from "~/components/ui/text";
 
 interface PropiedadesContenidoBoton {
-  enviandoAlerta: boolean;
   alertaEstaActiva: boolean;
   cancelacionSolicitada: boolean;
   manteniendoPresionado: boolean;
@@ -12,22 +11,12 @@ interface PropiedadesContenidoBoton {
 }
 
 export function ContenidoBotonEmergencia({
-  enviandoAlerta,
   alertaEstaActiva,
   cancelacionSolicitada,
   manteniendoPresionado,
   primerToque,
   tiempoRestante,
 }: PropiedadesContenidoBoton) {
-  if (enviandoAlerta) {
-    return (
-      <View className="items-center">
-        <ActivityIndicator size="large" color="white" />
-        <Text className="text-white text-sm font-bold mt-2">{alertaEstaActiva ? 'CANCELANDO...' : 'ENVIANDO...'}</Text>
-      </View>
-    );
-  }
-
   if (alertaEstaActiva) {
     if (manteniendoPresionado) {
       return (
@@ -51,7 +40,7 @@ export function ContenidoBotonEmergencia({
     return (
       <View className="items-center">
         <Text className="text-white text-lg font-bold text-center">
-          {cancelacionSolicitada ? 'CANCELACIÓN\nSOLICITADA' : 'SOLICITAR\nCANCELACIÓN'}
+          {cancelacionSolicitada ? "CANCELACIÓN\nSOLICITADA" : "SOLICITAR\nCANCELACIÓN"}
         </Text>
       </View>
     );
@@ -75,5 +64,5 @@ export function ContenidoBotonEmergencia({
     );
   }
 
-  return <Text className="text-white text-xl font-bold text-center">{alertaEstaActiva ? 'Alerta Enviada' : 'Emergencia'}</Text>;
+  return <Text className="text-white text-xl font-bold text-center">{alertaEstaActiva ? "Alerta Enviada" : "Emergencia"}</Text>;
 }

@@ -19,17 +19,13 @@ export function useRegistro() {
       setIsLoading(true);
       try {
         const result = await VictimaService.registrarVictima(datos as PerfilVictima);
-        if (result.exito && result.datos?.victima.id) {
-          const mensajeExito = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
-          toast.success(mensajeExito);
+        // registrarVictima now returns { victima: { id: string } }
+        if (result.victima.id) {
+          toast.success("Usuario registrado exitosamente");
           // Navegar después de un pequeño delay
           setTimeout(() => {
             router.push("/verificar-codigo" as any);
           }, 500);
-          return result;
-        } else {
-          const mensajeError = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
-          toast.error(mensajeError);
           return result;
         }
       } catch (error) {

@@ -1,4 +1,4 @@
-import { alertasApi } from "./baseApi";
+import { baseApi, handleApiResponse } from "./baseApi";
 import { RespuestaVerificarDenuncia } from "~/lib/tiposApi";
 
 export class DenunciasService {
@@ -8,7 +8,8 @@ export class DenunciasService {
       codigo: cud,
       numero_documento: numero_documento,
     };
-    return await alertasApi.post("/denuncias/verificar", payload);
+    const response = await baseApi.post("/denuncias/verificar", payload);
+    return handleApiResponse<RespuestaVerificarDenuncia>(response);
   }
 
   // Verificar denuncia por código de denuncia y cédula de identidad
@@ -17,6 +18,7 @@ export class DenunciasService {
       codigoDenuncia,
       cedulaIdentidad,
     };
-    return await alertasApi.post("/verificar-denuncia", payload);
+    const response = await baseApi.post("/verificar-denuncia", payload);
+    return handleApiResponse<RespuestaVerificarDenuncia>(response);
   }
 }

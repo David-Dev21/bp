@@ -47,12 +47,11 @@ TaskManager.defineTask(NOMBRE_TAREA_UBICACION, async ({ data, error }: any) => {
       },
     };
 
-    const resultado = await UbicacionService.enviarUbicacion(datosUbicacion);
-
-    if (resultado.exito) {
+    try {
+      await UbicacionService.enviarUbicacion(datosUbicacion);
       console.log("Ubicación enviada exitosamente en segundo plano");
-    } else {
-      console.error("Error al enviar ubicación:", resultado.mensaje);
+    } catch (error) {
+      console.error("Error al enviar ubicación:", error);
     }
   } catch (error) {
     console.error("Error en tarea de segundo plano:", error);

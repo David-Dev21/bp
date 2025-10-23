@@ -1,4 +1,4 @@
-import { alertasApi } from "./baseApi";
+import { baseApi, handleApiResponse } from "./baseApi";
 import { RespuestaUbicacionGPS } from "../lib/tiposApi";
 
 export interface PosicionGPS {
@@ -8,6 +8,7 @@ export interface PosicionGPS {
 
 export class departamentoService {
   static async obtenerUbicacionPorCoordenadas(posicion: PosicionGPS): Promise<RespuestaUbicacionGPS> {
-    return await alertasApi.get(`/departamentos/encontrar?latitud=${posicion.latitud}&longitud=${posicion.longitud}`);
+    const response = await baseApi.get(`/departamentos/encontrar?latitud=${posicion.latitud}&longitud=${posicion.longitud}`);
+    return handleApiResponse<RespuestaUbicacionGPS>(response);
   }
 }

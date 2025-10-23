@@ -31,15 +31,10 @@ export function useVerificacionCodigo() {
 
     setIsLoading(true);
     try {
-      const result = await CodigoService.solicitarCodigo(celular);
-      if (result.exito) {
-        setCodigoEnviado(true);
-        const mensajeExito = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
-        toast.success(mensajeExito);
-      } else {
-        const mensajeError = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
-        toast.error(mensajeError);
-      }
+      await CodigoService.solicitarCodigo(celular);
+      // solicitarCodigo now returns void on success, throws on error
+      setCodigoEnviado(true);
+      toast.success("Código enviado exitosamente");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Error al solicitar código");
     } finally {
@@ -56,46 +51,43 @@ export function useVerificacionCodigo() {
     setIsLoading(true);
     try {
       const result = await CodigoService.verificarCodigo(celular, codigo);
-      if (result.exito && result.datos?.victima) {
-        // Guardar en store de autenticación (se persiste automáticamente)
-        setUsuario(result.datos.victima.id, result.datos.victima.apiKey);
+      // verificarCodigo now returns { victima: { id: string; apiKey: string; } }
 
-        // Activar cuenta con dispositivo y tokens
-        const storedId = await AsyncStorage.getItem("id_dispositivo");
-        const fcmToken = await obtenerTokenActual();
-        const idVictima = useAtenticacionStore.getState().idVictima;
+      // Guardar en store de autenticación (se persiste automáticamente)
+      setUsuario(result.victima.id, result.victima.apiKey);
 
-        if (!storedId || !idVictima) {
-          toast.error("No se pudo obtener la información del dispositivo. Intenta nuevamente.");
-          return;
-        }
+      // Activar cuenta con dispositivo y tokens
+      const storedId = await AsyncStorage.getItem("id_dispositivo");
+      const fcmToken = await obtenerTokenActual();
+      const idVictima = useAtenticacionStore.getState().idVictima;
 
-        try {
-          await VictimaService.actualizarCuenta(idVictima, {
-            idDispositivo: storedId,
-            fcmToken: fcmToken || "",
-            infoDispositivo: {
-              marca: Device.brand || "Desconocido",
-              modelo: Device.modelName || "Desconocido",
-              versionSO: Device.osVersion || "Desconocido",
-              versionApp: Constants.nativeAppVersion || "1.0.0",
-            },
-          });
-        } catch (updateError) {
-          toast.error("No se pudo activar tu cuenta. Verifica tu conexión e intenta nuevamente.");
-          return;
-        }
-
-        const mensajeExito = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
-        toast.success(mensajeExito);
-        // Navegar después de un pequeño delay para que se vea el toast
-        setTimeout(() => {
-          router.replace("/alerta");
-        }, 500);
-      } else {
-        const mensajeError = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
-        toast.error(mensajeError);
+      if (!storedId || !idVictima) {
+        toast.error("No se pudo obtener la información del dispositivo. Intenta nuevamente.");
+        return;
       }
+
+      try {
+        await VictimaService.actualizarCuenta(idVictima, {
+          idDispositivo: storedId,
+          fcmToken: fcmToken || "",
+          infoDispositivo: {
+            marca: Device.brand || "Desconocido",
+            modelo: Device.modelName || "Desconocido",
+            versionSO: Device.osVersion || "Desconocido",
+            versionApp: Constants.nativeAppVersion || "1.0.0",
+          },
+        });
+        // actualizarCuenta returns void, success means no exception thrown
+      } catch (updateError) {
+        toast.error("No se pudo activar tu cuenta. Verifica tu conexión e intenta nuevamente.");
+        return;
+      }
+
+      toast.success("Código verificado exitosamente");
+      // Navegar después de un pequeño delay para que se vea el toast
+      setTimeout(() => {
+        router.replace("/alerta");
+      }, 500);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Error al verificar código");
     } finally {

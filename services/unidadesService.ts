@@ -1,33 +1,10 @@
-import { UnidadPolicial, RespuestaUnidadesPoliciales } from "~/lib/tiposApi";
-import { alertasApi } from "./baseApi";
+import { UnidadPolicial } from "~/lib/tiposApi";
+import { baseApi, handleApiResponse } from "./baseApi";
 
 export class UnidadesService {
-  static async obtenerUnidadesCercanas(latitud: number, longitud: number): Promise<RespuestaUnidadesPoliciales> {
-    try {
-      const respuesta = await alertasApi.get(`/unidades/cercanas?latitud=${latitud}&longitud=${longitud}`);
-
-      if (respuesta.exito && respuesta.datos) {
-        // Los datos ya vienen en el formato correcto
-        return {
-          exito: true,
-          codigo: respuesta.codigo,
-          mensaje: respuesta.mensaje,
-          datos: { unidades: respuesta.datos },
-        };
-      } else {
-        return {
-          exito: false,
-          codigo: respuesta.codigo || 500,
-          mensaje: respuesta.mensaje || "Error al obtener unidades cercanas",
-        };
-      }
-    } catch (error) {
-      return {
-        exito: false,
-        codigo: 500,
-        mensaje: "Error de conexión al obtener unidades cercanas",
-      };
-    }
+  static async obtenerUnidadesCercanas(latitud: number, longitud: number): Promise<{ unidades: UnidadPolicial[] }> {
+    const response = await baseApi.get(`/unidades/cercanas?latitud=${latitud}&longitud=${longitud}`);
+    return handleApiResponse<{ unidades: UnidadPolicial[] }>(response);
   }
 
   // Método para calcular distancia entre dos puntos (fórmula de Haversine)

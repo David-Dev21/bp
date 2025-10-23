@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
+import { useAlertaStore } from "~/stores/alertaStore";
+import { TareaUbicacionSegundoPlano } from "~/services/tareaUbicacionSegundoPlano";
 
 // Configurar el manejador de notificaciones
 Notifications.setNotificationHandler({
@@ -43,12 +45,14 @@ export const useNotificaciones = () => {
 
     // Listener para notificaciones recibidas mientras la app está abierta
     const listenerRecibida = Notifications.addNotificationReceivedListener((notification) => {
-      // Manejar notificación recibida (opcional: mostrar toast o algo)
+      // Manejar notificación de alerta finalizada
+      manejarNotificacionAlerta(notification);
     });
 
     // Listener para notificaciones respondidas (tocadas)
     const listenerRespondida = Notifications.addNotificationResponseReceivedListener((response) => {
-      // Navegar o manejar la respuesta
+      // Manejar notificación de alerta finalizada cuando se toca
+      manejarNotificacionAlerta(response.notification);
     });
 
     // Limpiar listeners al desmontar
@@ -59,4 +63,28 @@ export const useNotificaciones = () => {
   }, []);
 
   return {};
+};
+
+// Función para manejar notificaciones relacionadas con alertas
+const manejarNotificacionAlerta = (notification: Notifications.Notification) => {
+  const { data } = notification.request.content;
+
+  // Verificar si es una notificación de alerta finalizada
+  if (data?.tipo === "alerta_finalizada") {
+    const { idAlerta, estadoFinal } = data;
+
+    // Verificar que coincida con la alerta activa actual
+    const alertaActual = useAlertaStore.getState();
+    if (alertaActual.idAlerta === idAlerta) {
+      console.log(`Alerta ${idAlerta} finalizada con estado: ${estadoFinal}`);
+
+      // Detener la tarea en segundo plano
+      TareaUbicacionSegundoPlano.desregistrarTarea();
+
+      // Limpiar la alerta del store
+      alertaActual.limpiarAlerta();
+
+      // La notificación ya se mostrará automáticamente por el sistema
+    }
+  }
 };

@@ -18,13 +18,10 @@ export function useUnidades(latitud?: number, longitud?: number) {
       setCargando(true);
       setError(null);
       const respuesta = await UnidadesService.obtenerUnidadesCercanas(lat, lon);
-      if (respuesta.exito && respuesta.datos) {
-        setUnidades(respuesta.datos.unidades);
-      } else {
-        setError(respuesta.mensaje || "Error al cargar unidades policiales");
-      }
+      // obtenerUnidadesCercanas now returns { unidades: UnidadPolicial[] } directly
+      setUnidades(respuesta.unidades);
     } catch (err) {
-      setError("Error al cargar unidades policiales");
+      setError(err instanceof Error ? err.message : "Error al cargar unidades policiales");
       console.error("Error cargando unidades:", err);
     } finally {
       setCargando(false);

@@ -31,21 +31,16 @@ export function useActualizarUbicacion() {
         idMunicipio,
       };
 
-      const respuesta = await VictimaService.actualizarUbicacion(idVictima, datosParaAPI);
+      await VictimaService.actualizarUbicacion(idVictima, datosParaAPI);
+      // actualizarUbicacion now returns { victima: { id: string } } on success, throws on error
 
-      if (respuesta?.exito) {
-        // Actualizar solo la dirección en el store local
-        setDatosUbicacion({
-          ...datosUbicacion,
-          direccion,
-        });
-        toast.success("Ubicación actualizada correctamente");
-        return true;
-      } else {
-        const mensajeError = respuesta.error ? `${respuesta.mensaje} - ${respuesta.error}` : respuesta.mensaje;
-        toast.error(mensajeError);
-        return false;
-      }
+      // Actualizar solo la dirección en el store local
+      setDatosUbicacion({
+        ...datosUbicacion,
+        direccion,
+      });
+      toast.success("Ubicación actualizada correctamente");
+      return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Error al actualizar ubicación");
       return false;

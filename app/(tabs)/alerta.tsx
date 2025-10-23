@@ -1,45 +1,62 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Pressable, Linking } from "react-native";
 import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "~/components/ui/alert-dialog";
 import { useBotonPanico } from "~/hooks/emergencia/useBotonPanico";
 import { useAlertaStore } from "~/stores/alertaStore";
 import { useAtenticacionStore } from "~/stores/atenticacionStore";
+import { useUbicacionStore } from "~/stores/ubicacionStore";
 import { ContenidoBotonEmergencia } from "~/components/emergencia/ContenidoBotonEmergencia";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { THEME_COLORS } from "~/lib/theme";
 import { useSafeAreaInsetsWithFallback } from "~/hooks/useSafeAreaInsetsWithFallback";
+import { AlertaService } from "~/services/alertaService";
 
 export default function BotonPanico() {
   const { colorScheme } = useColorScheme();
   const { estado } = useAlertaStore();
-  const { codigoDenuncia } = useAtenticacionStore();
+  const { codigoDenuncia, idVictima } = useAtenticacionStore();
+  const { ubicacionActual } = useUbicacionStore();
   const insets = useSafeAreaInsetsWithFallback();
+
+  // PREPARAR TODOS LOS DATOS PARA ENVÍO INMEDIATO (estado local optimizado)
+  const datosAlertaPreparados = useMemo(() => {
+    if (!idVictima || !codigoDenuncia) {
+      return undefined; // No se puede enviar sin datos básicos
+    }
+
+    // Ubicación lista (si existe)
+    const ubicacion = ubicacionActual
+      ? {
+          longitud: ubicacionActual.coords.longitude,
+          latitud: ubicacionActual.coords.latitude,
+          precision: ubicacionActual.coords.accuracy || 10,
+          marcaTiempo: AlertaService.obtenerFechaHoraISO(),
+        }
+      : undefined;
+
+    return {
+      idVictima,
+      fechaHora: AlertaService.obtenerFechaHoraISO(),
+      codigoDenuncia,
+      codigoRegistro: `REG-${idVictima.slice(-8)}`,
+      ...(ubicacion && { ubicacion }),
+    };
+  }, [idVictima, codigoDenuncia, ubicacionActual]);
+
   const {
     alertaEstaActiva,
     cancelacionSolicitada,
     compartiendoUbicacion,
     estadoBoton,
     botonDeshabilitado,
-    enviandoAlerta,
-    dialogoEstadoAlerta,
     manejarToque,
     manejarPressIn,
     manejarPressOut,
-    cerrarDialogoYLimpiar,
     obtenerTextoEstado,
     obtenerEstilosBoton,
-  } = useBotonPanico();
+  } = useBotonPanico(datosAlertaPreparados);
 
   const realizarLlamada = (numero: string) => {
     Linking.openURL(`tel:${numero}`);
@@ -81,7 +98,6 @@ export default function BotonPanico() {
             }}
           >
             <ContenidoBotonEmergencia
-              enviandoAlerta={enviandoAlerta}
               alertaEstaActiva={alertaEstaActiva}
               cancelacionSolicitada={cancelacionSolicitada}
               manteniendoPresionado={estadoBoton.manteniendoPresionado}
@@ -119,20 +135,6 @@ export default function BotonPanico() {
           </View>
         </View>
       </View>
-
-      <AlertDialog open={dialogoEstadoAlerta.mostrar}>
-        <AlertDialogContent className="4/5">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{dialogoEstadoAlerta.titulo}</AlertDialogTitle>
-            <AlertDialogDescription>{dialogoEstadoAlerta.descripcion}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onPress={cerrarDialogoYLimpiar}>
-              <Text>OK</Text>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </View>
   );
 }

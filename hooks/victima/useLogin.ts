@@ -25,21 +25,28 @@ export const useLogin = () => {
   });
 
   const verificarDenuncia = async (codigoDenuncia: string, cedulaIdentidad: string) => {
-    const verificacion = await DenunciasService.verificarDenunciaPorCodigoYCedula(codigoDenuncia, cedulaIdentidad);
-    if (!verificacion.exito || !verificacion.datos?.codigoValido) {
-      const mensajeError = verificacion.error ? `${verificacion.mensaje} - ${verificacion.error}` : verificacion.mensaje;
+    try {
+      const verificacion = await DenunciasService.verificarDenunciaPorCodigoYCedula(codigoDenuncia, cedulaIdentidad);
+      // verificarDenunciaPorCodigoYCedula now returns { codigoValido: boolean }
+      return verificacion.codigoValido;
+    } catch (error) {
+      const mensajeError = error instanceof Error ? error.message : "Error al verificar denuncia";
       toast.error(mensajeError);
       return false;
     }
-    return true;
   };
 
   const verificarUsuarioExistente = async (cedulaIdentidad: string) => {
-    const verificacion = await VictimaService.verificarVictimaPorCI(cedulaIdentidad);
-    if (!verificacion.exito || !verificacion.datos?.existe) {
+    try {
+      const verificacion = await VictimaService.verificarVictimaPorCI(cedulaIdentidad);
+      // verificarVictimaPorCI now returns { existe: boolean; idVictima?: string; ... }
+      if (!verificacion.existe) {
+        return null;
+      }
+      return verificacion;
+    } catch (error) {
       return null;
     }
-    return verificacion.datos;
   };
 
   const manejarUsuarioValidado = async (idVictima: string) => {
@@ -55,12 +62,13 @@ export const useLogin = () => {
   };
 
   const manejarUsuarioPendiente = async (idVictima: string) => {
-    const perfil = await VictimaService.obtenerPerfilPorIdVictima(idVictima);
-    if (perfil.exito && perfil.datos?.victima) {
-      cargarDatosPerfil(perfil.datos.victima);
+    try {
+      const perfil = await VictimaService.obtenerPerfilPorIdVictima(idVictima);
+      // obtenerPerfilPorIdVictima now returns { victima: PerfilVictima }
+      cargarDatosPerfil(perfil.victima);
       router.push("/verificar-codigo" as any);
-    } else {
-      const mensajeError = perfil.error ? `${perfil.mensaje} - ${perfil.error}` : perfil.mensaje;
+    } catch (error) {
+      const mensajeError = error instanceof Error ? error.message : "Error al obtener perfil";
       toast.error(mensajeError);
     }
   };

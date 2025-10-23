@@ -28,21 +28,17 @@ export const useUbicacionGeoServer = () => {
       };
 
       const respuesta = await departamentoService.obtenerUbicacionPorCoordenadas(posicion);
-
-      if (!respuesta.exito || !respuesta.datos) {
-        throw new Error(respuesta.mensaje || "Error al obtener información geográfica");
-      }
+      // obtenerUbicacionPorCoordenadas now returns DatosUbicacionGeografica directly
 
       setDatosUbicacion({
-        idMunicipio: respuesta.datos.municipio.id.toString(),
-        municipio: respuesta.datos.municipio.municipio,
-        provincia: respuesta.datos.provincia.provincia,
-        departamento: respuesta.datos.departamento.departamento,
+        idMunicipio: respuesta.municipio.id.toString(),
+        municipio: respuesta.municipio.municipio,
+        provincia: respuesta.provincia.provincia,
+        departamento: respuesta.departamento.departamento,
       });
 
       setUbicacionObtenida(true);
-      const mensajeExito = respuesta.error ? `${respuesta.mensaje} - ${respuesta.error}` : respuesta.mensaje;
-      toast.success(mensajeExito);
+      toast.success("Ubicación obtenida exitosamente");
     } catch (error: any) {
       const mensajeError = error instanceof Error ? error.message : "Error al obtener ubicación";
       toast.error(mensajeError);

@@ -20,36 +20,27 @@ export function useContactosEmergencia() {
     try {
       setIsLoading(true);
       if (esEditar && idContacto) {
-        const respuesta = await VictimaService.actualizarContactoEmergencia(idVictima, idContacto, {
+        await VictimaService.actualizarContactoEmergencia(idVictima, idContacto, {
           parentesco: contacto.parentesco,
           nombreCompleto: contacto.nombre,
           celular: contacto.telefono,
         });
-        if (!respuesta.exito) {
-          toast.error(respuesta.mensaje || "Error al actualizar contacto");
-          throw new Error(respuesta.mensaje);
-        }
         // Actualizar localmente después de éxito
         const nuevosContactos = contactosEmergencia.map((c) =>
           c.id === idContacto ? { ...c, nombre: contacto.nombre, telefono: contacto.telefono, parentesco: contacto.parentesco } : c
         );
         setContactosEmergencia(nuevosContactos);
-        toast.success(respuesta.mensaje || "Contacto guardado exitosamente");
+        toast.success("Contacto guardado exitosamente");
       } else {
-        const respuesta = await VictimaService.crearContactoEmergencia(idVictima, {
+        await VictimaService.crearContactoEmergencia(idVictima, {
           parentesco: contacto.parentesco,
           nombreCompleto: contacto.nombre,
           celular: contacto.telefono,
           principal: contacto.esPrincipal,
         });
-        if (!respuesta.exito) {
-          toast.error(respuesta.mensaje || "Error al crear contacto");
-          throw new Error(respuesta.mensaje);
-        }
-        toast.success(respuesta.mensaje || "Contacto guardado exitosamente");
+        toast.success("Contacto guardado exitosamente");
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Error al guardar contacto");
       throw error;
     } finally {
       setIsLoading(false);
@@ -62,17 +53,12 @@ export function useContactosEmergencia() {
 
     try {
       setIsLoading(true);
-      const respuesta = await VictimaService.eliminarContactoEmergencia(idVictima, idContacto);
-      if (!respuesta.exito) {
-        toast.error(respuesta.mensaje || "Error al eliminar contacto");
-        throw new Error(respuesta.mensaje);
-      }
+      await VictimaService.eliminarContactoEmergencia(idVictima, idContacto);
       // Actualizar localmente removiendo el contacto
       const nuevosContactos = contactosEmergencia.filter((c) => c.id !== idContacto);
       setContactosEmergencia(nuevosContactos);
-      toast.success(respuesta.mensaje || "Contacto eliminado exitosamente");
+      toast.success("Contacto eliminado exitosamente");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Error al eliminar contacto");
       throw error;
     } finally {
       setIsLoading(false);
@@ -85,14 +71,9 @@ export function useContactosEmergencia() {
 
     try {
       setIsLoading(true);
-      const respuesta = await VictimaService.marcarContactoPrincipal(idVictima, idContacto);
-      if (!respuesta.exito) {
-        toast.error(respuesta.mensaje || "Error al marcar principal");
-        throw new Error(respuesta.mensaje);
-      }
-      toast.success(respuesta.mensaje || "Contacto marcado como principal");
+      await VictimaService.marcarContactoPrincipal(idVictima, idContacto);
+      toast.success("Contacto marcado como principal");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Error al marcar principal");
       throw error;
     } finally {
       setIsLoading(false);

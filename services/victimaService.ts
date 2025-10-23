@@ -1,4 +1,4 @@
-import { alertasApi } from "./baseApi";
+import { baseApi, handleApiResponse } from "./baseApi";
 import { useAtenticacionStore } from "~/stores/atenticacionStore";
 import {
   RespuestaVerificarVictima,
@@ -12,36 +12,41 @@ import {
 export class VictimaService {
   // Verificar si ya existe el usuario en la app botón de pánico
   static async verificarVictimaPorCI(ci: string): Promise<RespuestaVerificarVictima> {
-    return await alertasApi.get(`/victimas/verificar?ci=${ci}`);
+    const response = await baseApi.get(`/victimas/verificar?ci=${ci}`);
+    return handleApiResponse<RespuestaVerificarVictima>(response);
   }
 
   // Obtener perfil completo por ID Víctima
   static async obtenerPerfilPorIdVictima(idVictima: string): Promise<RespuestaObtenerPerfil> {
-    return await alertasApi.get(`/victimas/${idVictima}`);
+    const response = await baseApi.get(`/victimas/${idVictima}`);
+    return handleApiResponse<RespuestaObtenerPerfil>(response);
   }
 
   // Registrar usuario en la app botón de pánico
   static async registrarVictima(profileData: PerfilVictima): Promise<RespuestaCrearVictima> {
-    return await alertasApi.post("/victimas", profileData);
+    const response = await baseApi.post("/victimas", profileData);
+    return handleApiResponse<RespuestaCrearVictima>(response);
   }
 
   // Actualizar perfil de víctima
   static async actualizarVictima(idVictima: string, profileData: Partial<PerfilVictima>): Promise<RespuestaActualizarVictima> {
     const { apiKey } = useAtenticacionStore.getState();
-    return await alertasApi.patch(`/victimas/${idVictima}/perfil`, profileData, {
+    const response = await baseApi.patch(`/victimas/${idVictima}/perfil`, profileData, {
       headers: {
         "X-API-Key": apiKey,
       },
     });
+    return handleApiResponse<RespuestaActualizarVictima>(response);
   }
   // Actualizar perfil de víctima
   static async actualizarUbicacion(idVictima: string, profileData: Partial<PerfilVictima>): Promise<RespuestaActualizarVictima> {
     const { apiKey } = useAtenticacionStore.getState();
-    return await alertasApi.patch(`/victimas/${idVictima}/ubicacion`, profileData, {
+    const response = await baseApi.patch(`/victimas/${idVictima}/ubicacion`, profileData, {
       headers: {
         "X-API-Key": apiKey,
       },
     });
+    return handleApiResponse<RespuestaActualizarVictima>(response);
   }
 
   // Actualizar cuenta de víctima
@@ -54,26 +59,29 @@ export class VictimaService {
     }
   ): Promise<RespuestaActualizarVictima> {
     const { apiKey } = useAtenticacionStore.getState();
-    return await alertasApi.patch(`/victimas/${idVictima}/cuenta`, accountData, {
+    const response = await baseApi.patch(`/victimas/${idVictima}/cuenta`, accountData, {
       headers: {
         "X-API-Key": apiKey,
       },
     });
+    return handleApiResponse<RespuestaActualizarVictima>(response);
   }
 
   // Actualizar información de contacto (celular y correo)
   static async actualizarContacto(idVictima: string, contactoData: { celular?: string; correo?: string }): Promise<RespuestaActualizarVictima> {
     const { apiKey } = useAtenticacionStore.getState();
-    return await alertasApi.patch(`/victimas/${idVictima}/contacto`, contactoData, {
+    const response = await baseApi.patch(`/victimas/${idVictima}/contacto`, contactoData, {
       headers: {
         "X-API-Key": apiKey,
       },
     });
+    return handleApiResponse<RespuestaActualizarVictima>(response);
   }
 
   // Verificar estado de la cuenta
   static async verificarEstadoCuenta(idVictima: string): Promise<RespuestaVerificarCuenta> {
-    return await alertasApi.get(`/victimas/${idVictima}/verificar-cuenta`);
+    const response = await baseApi.get(`/victimas/${idVictima}/verificar-cuenta`);
+    return handleApiResponse<RespuestaVerificarCuenta>(response);
   }
 
   // Actualizar contacto específico de emergencia
@@ -85,13 +93,14 @@ export class VictimaService {
       nombreCompleto: string;
       celular: string;
     }
-  ): Promise<any> {
+  ): Promise<void> {
     const { apiKey } = useAtenticacionStore.getState();
-    return await alertasApi.patch(`/victimas/${idVictima}/contactos/${idContacto}`, datosContacto, {
+    const response = await baseApi.patch(`/victimas/${idVictima}/contactos/${idContacto}`, datosContacto, {
       headers: {
         "X-API-Key": apiKey,
       },
     });
+    handleApiResponse(response);
   }
 
   // Crear nuevo contacto de emergencia
@@ -103,29 +112,31 @@ export class VictimaService {
       celular: string;
       principal: boolean;
     }
-  ): Promise<any> {
+  ): Promise<void> {
     const { apiKey } = useAtenticacionStore.getState();
-    return await alertasApi.post(`/victimas/${idVictima}/contactos`, datosContacto, {
+    const response = await baseApi.post(`/victimas/${idVictima}/contactos`, datosContacto, {
       headers: {
         "X-API-Key": apiKey,
       },
     });
+    handleApiResponse(response);
   }
 
   // Eliminar contacto de emergencia
-  static async eliminarContactoEmergencia(idVictima: string, idContacto: string): Promise<any> {
+  static async eliminarContactoEmergencia(idVictima: string, idContacto: string): Promise<void> {
     const { apiKey } = useAtenticacionStore.getState();
-    return await alertasApi.delete(`/victimas/${idVictima}/contactos/${idContacto}`, {
+    const response = await baseApi.delete(`/victimas/${idVictima}/contactos/${idContacto}`, {
       headers: {
         "X-API-Key": apiKey,
       },
     });
+    handleApiResponse(response);
   }
 
   // Marcar contacto como principal
-  static async marcarContactoPrincipal(idVictima: string, idContacto: string): Promise<any> {
+  static async marcarContactoPrincipal(idVictima: string, idContacto: string): Promise<void> {
     const { apiKey } = useAtenticacionStore.getState();
-    return await alertasApi.patch(
+    const response = await baseApi.patch(
       `/victimas/${idVictima}/contactos/${idContacto}/principal`,
       {},
       {
@@ -134,5 +145,6 @@ export class VictimaService {
         },
       }
     );
+    handleApiResponse(response);
   }
 }

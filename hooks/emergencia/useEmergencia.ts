@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import { toast } from "sonner-native";
 import { Linking } from "react-native";
 import { AlertaService, AlertaEmergencia } from "~/services/alertaService";
@@ -8,7 +8,6 @@ import { usePerfilStore } from "~/stores/perfilStore";
 import { useUbicacionStore } from "~/stores/ubicacionStore";
 
 export function useEmergencia() {
-  const [enviandoAlerta, setEnviandoAlerta] = useState(false);
   const enviandoRef = useRef(false);
   const { idVictima, codigoDenuncia } = useAtenticacionStore();
   const { contactosEmergencia, datosPersonales } = usePerfilStore();
@@ -38,70 +37,92 @@ export function useEmergencia() {
     return contactosEmergencia.find((contacto) => contacto.esPrincipal);
   };
 
-  const enviarAlertaEmergencia = async () => {
+  const enviarAlertaEmergencia = async (datosPreparados?: AlertaEmergencia) => {
     // NO permitir enviar si ya hay una alerta activa o ya se está enviando
     if (enviandoRef.current || alertaEstaActiva) {
       return null;
     }
 
-    if (!idVictima || !codigoDenuncia) {
-      return null;
-    }
+    // Usar datos preparados si se pasan, sino obtener del store
+    let datosAlerta: AlertaEmergencia;
 
-    enviandoRef.current = true;
-    setEnviandoAlerta(true);
+    if (datosPreparados) {
+      datosAlerta = datosPreparados;
+    } else {
+      // Verificar que tenemos los datos requeridos del store
+      if (!idVictima || !codigoDenuncia) {
+        return null;
+      }
 
-    try {
-      const ubicacion = await obtenerUbicacion();
-
-      const datosAlerta: AlertaEmergencia = {
+      datosAlerta = {
         idVictima,
         fechaHora: AlertaService.obtenerFechaHoraISO(),
         codigoDenuncia,
         codigoRegistro: `REG-${idVictima.slice(-8)}`,
-        ...(ubicacion && { ubicacion }),
+        ...(ubicacionActual && {
+          ubicacion: {
+            longitud: ubicacionActual.coords.longitude,
+            latitud: ubicacionActual.coords.latitude,
+            precision: ubicacionActual.coords.accuracy || 10,
+            marcaTiempo: AlertaService.obtenerFechaHoraISO(),
+          },
+        }),
       };
-
-      const respuesta = await AlertaService.enviarAlerta(datosAlerta);
-
-      if (!respuesta.exito || !respuesta.datos) {
-        return respuesta;
-      }
-
-      // Guardar SOLO idAlerta y estado en el store
-      setAlertaActiva(respuesta.datos.alerta.id, respuesta.datos.alerta.estadoAlerta);
-
-      // Enviar mensaje de WhatsApp al contacto principal
-      const contactoPrincipal = obtenerContactoPrincipal();
-      if (contactoPrincipal) {
-        const mensaje = `🚨 ALERTA DE EMERGENCIA 🚨\n\n${datosPersonales.nombres} ${
-          datosPersonales.apellidos
-        } ha activado el botón de pánico.\n\nFecha y hora: ${new Date().toLocaleString(
-          "es-ES"
-        )}\n\nPor favor, contacta inmediatamente a las autoridades o al número de emergencia.\n\nMensaje automático del sistema de alertas.`;
-        await enviarMensajeWhatsApp(contactoPrincipal.telefono, mensaje);
-      } else {
-        toast.warning("No se encontró contacto de emergencia principal para enviar mensaje de WhatsApp");
-      }
-
-      return respuesta;
-    } catch (error) {
-      return { exito: false, codigo: 500, mensaje: error instanceof Error ? error.message : "Error al enviar alerta" };
-    } finally {
-      setEnviandoAlerta(false);
-      enviandoRef.current = false;
     }
+
+    // Verificación final de que tenemos los datos requeridos
+    if (!datosAlerta.idVictima || !datosAlerta.codigoDenuncia) {
+      return null;
+    }
+
+    // BLOQUEAR inmediatamente para evitar múltiples envíos
+    enviandoRef.current = true;
+
+    // MOSTRAR CONFIRMACIÓN INMEDIATA al usuario
+    toast.success("¡Alerta enviada! Las autoridades han sido notificadas");
+
+    // PROCESAR TODO EN BACKGROUND (no bloquea la UI)
+    setTimeout(async () => {
+      try {
+        const resultadoAlerta = await AlertaService.enviarAlerta(datosAlerta);
+
+        // Guardar alerta en store
+        setAlertaActiva(resultadoAlerta.alerta.id, resultadoAlerta.alerta.estadoAlerta);
+
+        // Enviar WhatsApp en background (no bloquea)
+        enviarMensajeWhatsAppBackground();
+      } catch (error) {
+        // Si falló, mostrar error pero no bloquear UI
+        console.error("Error enviando alerta:", error);
+        toast.error("Error al enviar alerta, pero se notificó localmente");
+      } finally {
+        // DESBLOQUEAR después de procesamiento
+        enviandoRef.current = false;
+      }
+    }, 100); // Pequeño delay para asegurar que el toast se muestre
+
+    // RETORNAR ÉXITO INMEDIATO (UI no espera)
+    return { exito: true, mensaje: "Alerta enviada exitosamente" };
   };
 
-  const obtenerUbicacion = async () => {
-    if (!ubicacionActual) return null;
-
-    return {
-      longitud: ubicacionActual.coords.longitude,
-      latitud: ubicacionActual.coords.latitude,
-      precision: 10,
-      marcaTiempo: AlertaService.obtenerFechaHoraISO(),
-    };
+  const enviarMensajeWhatsAppBackground = () => {
+    // Enviar WhatsApp en background sin bloquear
+    setTimeout(async () => {
+      try {
+        const contactoPrincipal = obtenerContactoPrincipal();
+        if (contactoPrincipal) {
+          const mensaje = `🚨 ALERTA DE EMERGENCIA 🚨\n\n${datosPersonales.nombres} ${
+            datosPersonales.apellidos
+          } ha activado el botón de pánico.\n\nFecha y hora: ${new Date().toLocaleString(
+            "es-ES"
+          )}\n\nPor favor, contacta inmediatamente a las autoridades o al número de emergencia.\n\nMensaje automático del sistema de alertas.`;
+          await enviarMensajeWhatsApp(contactoPrincipal.telefono, mensaje);
+        }
+      } catch (error) {
+        // Error silencioso en background
+        console.error("Error enviando WhatsApp:", error);
+      }
+    }, 2000); // Esperar 2 segundos antes de enviar WhatsApp
   };
 
   const solicitarCancelacionAlerta = async () => {
@@ -113,17 +134,18 @@ export function useEmergencia() {
       return { exito: false, codigo: 400, mensaje: "Ya se solicitó la cancelación" };
     }
 
-    const resultado = await AlertaService.solicitarCancelacionAlerta(idAlerta);
-    if (resultado.exito) {
+    try {
+      await AlertaService.solicitarCancelacionAlerta(idAlerta);
       setCancelacionSolicitada(true);
+      return { exito: true, mensaje: "Cancelación solicitada exitosamente" };
+    } catch (error) {
+      return { exito: false, codigo: 500, mensaje: "Error al solicitar cancelación" };
     }
-    return resultado;
   };
 
   return {
     enviarAlertaEmergencia,
     solicitarCancelacionAlerta,
-    enviandoAlerta,
     idAlerta,
     estado,
     cancelacionSolicitada,

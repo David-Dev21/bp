@@ -38,9 +38,7 @@
       ],
       "package": "com.felcv.botonpanico",
       "googleServicesFile": "./google-services.json",
-      "softwareKeyboardLayoutMode": "pan",
-      "enableProguardInReleaseBuilds": true,
-      "enableShrinkResourcesInReleaseBuilds": true
+      "softwareKeyboardLayoutMode": "pan"
     },
     "plugins": [
       "expo-router",
@@ -60,8 +58,6 @@
         "expo-build-properties",
         {
           "android": {
-            "enableProguardInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true,
             "useLegacyPackaging": false,
             "extraProguardRules": "-keep class com.mapbox.** { *; }\n-keep class com.maplibre.** { *; }",
             "packagingOptions": {
@@ -87,7 +83,7 @@
       "eas": {
         "projectId": "25eb477d-40aa-4a10-927c-07847a4df6c9"
       },
-      "EXPO_PUBLIC_ALERTAS_URL": "https://7a8755b5d444.ngrok-free.app"
+      "EXPO_PUBLIC_ALERTAS_URL": "http:localhost:3001"
     },
     "runtimeVersion": {
       "policy": "appVersion"

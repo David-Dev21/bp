@@ -12,20 +12,20 @@ export const useAutenticacion = () => {
     try {
       const result = await DenunciasService.verificarDenuncia(numero_documento, cud);
 
-      if (result.exito) {
+      // verificarDenuncia now returns { codigoValido: boolean }
+      if (result.codigoValido) {
         const verificacion = await VictimaService.verificarVictimaPorCI(numero_documento);
 
-        if (verificacion.exito && verificacion.datos?.existe && verificacion.datos.idVictima) {
-          return { success: true, idVictima: verificacion.datos.idVictima };
+        // verificarVictimaPorCI now returns { existe: boolean; idVictima?: string; ... }
+        if (verificacion.existe && verificacion.idVictima) {
+          return { success: true, idVictima: verificacion.idVictima };
         } else {
-          const mensajeError = verificacion.error ? `${verificacion.mensaje} - ${verificacion.error}` : verificacion.mensaje;
-          toast.error(mensajeError);
-          return { success: false, message: verificacion.mensaje };
+          toast.error("Usuario no encontrado en el sistema");
+          return { success: false, message: "Usuario no encontrado en el sistema" };
         }
       } else {
-        const mensajeError = result.error ? `${result.mensaje} - ${result.error}` : result.mensaje;
-        toast.error(mensajeError);
-        return { success: false, message: result.mensaje };
+        toast.error("Código de denuncia inválido");
+        return { success: false, message: "Código de denuncia inválido" };
       }
     } catch (error) {
       const mensajeError = error instanceof Error ? error.message : "Error al autenticar";

@@ -29,49 +29,45 @@ export function usePerfil() {
       setIsRefreshing(true);
       const respuesta = await VictimaService.obtenerPerfilPorIdVictima(idVictima);
 
-      if (respuesta?.datos?.victima) {
-        const victima = respuesta.datos.victima;
+      // obtenerPerfilPorIdVictima now returns { victima: PerfilVictima }
+      const victima = respuesta.victima;
 
-        // Actualizar store con datos del servidor
-        setDatosPersonales({
-          cedulaIdentidad: victima.cedulaIdentidad || "",
-          nombres: victima.nombres || "",
-          apellidos: victima.apellidos || "",
-          fechaNacimiento: victima.fechaNacimiento || "",
-          celular: victima.celular || "",
-          correo: victima.correo || "",
-          fechaRegistro: victima.fechaRegistro || "",
-        });
+      // Actualizar store con datos del servidor
+      setDatosPersonales({
+        cedulaIdentidad: victima.cedulaIdentidad || "",
+        nombres: victima.nombres || "",
+        apellidos: victima.apellidos || "",
+        fechaNacimiento: victima.fechaNacimiento || "",
+        celular: victima.celular || "",
+        correo: victima.correo || "",
+        fechaRegistro: victima.fechaRegistro || "",
+      });
 
-        setDatosUbicacion({
-          idMunicipio: victima.idMunicipio ? String(victima.idMunicipio) : "",
-          municipio: victima.municipio || "",
-          provincia: victima.provincia || "",
-          departamento: victima.departamento || "",
-          direccion: {
-            zona: victima.direccion?.zona || "",
-            calle: victima.direccion?.calle || "",
-            numero: victima.direccion?.numero || "",
-            referencia: victima.direccion?.referencia || "",
-          },
-        });
+      setDatosUbicacion({
+        idMunicipio: victima.idMunicipio ? String(victima.idMunicipio) : "",
+        municipio: victima.municipio || "",
+        provincia: victima.provincia || "",
+        departamento: victima.departamento || "",
+        direccion: {
+          zona: victima.direccion?.zona || "",
+          calle: victima.direccion?.calle || "",
+          numero: victima.direccion?.numero || "",
+          referencia: victima.direccion?.referencia || "",
+        },
+      });
 
-        if (victima.contactosEmergencia) {
-          const contactosFormateados = victima.contactosEmergencia.map((contacto: ContactoEmergencia) => ({
-            id: contacto.id,
-            parentesco: contacto.parentesco,
-            nombre: contacto.nombreCompleto,
-            telefono: contacto.celular,
-            esPrincipal: contacto.principal || false,
-          }));
-          setContactosEmergencia(contactosFormateados);
-        }
-
-        setHasLoaded(true);
-      } else {
-        const mensajeError = respuesta.error ? `${respuesta.mensaje} - ${respuesta.error}` : respuesta.mensaje;
-        toast.error(mensajeError);
+      if (victima.contactosEmergencia) {
+        const contactosFormateados = victima.contactosEmergencia.map((contacto: ContactoEmergencia) => ({
+          id: contacto.id,
+          parentesco: contacto.parentesco,
+          nombre: contacto.nombreCompleto,
+          telefono: contacto.celular,
+          esPrincipal: contacto.principal || false,
+        }));
+        setContactosEmergencia(contactosFormateados);
       }
+
+      setHasLoaded(true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Error al cargar perfil");
     } finally {

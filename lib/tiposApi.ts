@@ -1,5 +1,5 @@
-// Tipos e interfaces comunes para respuestas de API
-export interface RespuestaBase<T = any> {
+// Estructura base de respuesta del backend
+export interface RespuestaBase<T = unknown> {
   exito: boolean;
   codigo: number;
   mensaje: string;
@@ -24,7 +24,7 @@ export interface UnidadPolicial {
 }
 
 // Respuesta para unidades policiales
-export interface RespuestaUnidadesPoliciales extends RespuestaBase<{ unidades: UnidadPolicial[] }> {}
+export type RespuestaUnidadesPoliciales = RespuestaBase<{ unidades: UnidadPolicial[] }>;
 
 // Tipos específicos para datos comunes
 export interface DatosMunicipio {
@@ -92,33 +92,34 @@ export interface PerfilVictima {
 }
 
 // Interfaces específicas para respuestas de víctimas
-export interface RespuestaVerificarVictima
-  extends RespuestaBase<{ existe: boolean; idVictima?: string; estadoCuenta?: EstadoCuenta; idDispositivo?: string }> {}
+export type RespuestaVerificarVictima = {
+  existe: boolean;
+  idVictima?: string;
+  estadoCuenta?: EstadoCuenta;
+  idDispositivo?: string;
+};
 
-export interface RespuestaCrearVictima extends RespuestaBase<{ victima: { id: string } }> {}
+export type RespuestaCrearVictima = { victima: { id: string } };
 
-export interface RespuestaActualizarVictima extends RespuestaBase<{ victima: { id: string } }> {}
+export type RespuestaActualizarVictima = { victima: { id: string } };
 
-export interface RespuestaObtenerPerfil extends RespuestaBase<{ victima: PerfilVictima }> {}
+export type RespuestaObtenerPerfil = { victima: PerfilVictima };
 
-export interface RespuestaCrearAlerta extends RespuestaBase<{ alerta: { id: string; estadoAlerta: EstadoAlerta } }> {}
+export type RespuestaCrearAlerta = { alerta: { id: string; estadoAlerta: EstadoAlerta } };
 
-export interface RespuestaEstadoAlerta extends RespuestaBase<{ estadoAlerta: EstadoAlerta }> {}
+export type RespuestaUbicacionGPS = DatosUbicacionGeografica;
 
-export interface RespuestaUbicacionGPS extends RespuestaBase<DatosUbicacionGeografica> {}
-
-export interface RespuestaVerificarCuenta extends RespuestaBase<{ estadoCuenta: EstadoCuenta }> {}
+export type RespuestaVerificarCuenta = { estadoCuenta: EstadoCuenta };
 
 // Respuestas para denuncias
-export interface RespuestaVerificarDenuncia extends RespuestaBase<{ codigoValido: boolean }> {}
+export type RespuestaVerificarDenuncia = { codigoValido: boolean };
 
 // Respuestas para códigos de verificación
-export interface RespuestaSolicitarCodigo extends RespuestaBase {}
+export type RespuestaSolicitarCodigo = void;
 
-export interface RespuestaVerificarCodigo
-  extends RespuestaBase<{
-    victima: {
-      id: string;
-      apiKey: string;
-    };
-  }> {}
+export type RespuestaVerificarCodigo = {
+  victima: {
+    id: string;
+    apiKey: string;
+  };
+};

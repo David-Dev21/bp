@@ -1,5 +1,5 @@
-import { alertasApi } from "./baseApi";
-import { RespuestaCrearAlerta, RespuestaEstadoAlerta, EstadoAlerta, RespuestaBase } from "../lib/tiposApi";
+import { baseApi, handleApiResponse } from "./baseApi";
+import { RespuestaCrearAlerta, EstadoAlerta } from "../lib/tiposApi";
 
 // Estados de una alerta
 export type { EstadoAlerta };
@@ -26,20 +26,17 @@ export interface AlertaActiva {
 export class AlertaService {
   // Enviar alerta de emergencia
   static async enviarAlerta(datosAlerta: AlertaEmergencia): Promise<RespuestaCrearAlerta> {
-    return await alertasApi.post("/alertas", datosAlerta);
-  }
-
-  // Consultar estado actual de una alerta
-  static async consultarEstadoAlerta(idAlerta: string): Promise<RespuestaEstadoAlerta> {
-    return await alertasApi.get(`/alertas/${idAlerta}/estado`);
+    const response = await baseApi.post("/alertas", datosAlerta);
+    return handleApiResponse<RespuestaCrearAlerta>(response);
   }
 
   // Solicitar cancelación de alerta al backend
-  static async solicitarCancelacionAlerta(idAlerta: string): Promise<RespuestaBase> {
-    return await alertasApi.post(`/solicitudes-cancelacion`, {
+  static async solicitarCancelacionAlerta(idAlerta: string): Promise<void> {
+    const response = await baseApi.post(`/solicitudes-cancelacion`, {
       idAlerta,
       fechaSolicitud: this.obtenerFechaHoraISO(),
     });
+    handleApiResponse(response);
   }
 
   // Formatear fecha como ISO 8601

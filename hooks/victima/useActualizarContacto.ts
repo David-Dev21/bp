@@ -18,22 +18,17 @@ export function useActualizarContacto() {
     try {
       setIsUpdating(true);
 
-      const respuesta = await VictimaService.actualizarContacto(idVictima, contactoData);
+      await VictimaService.actualizarContacto(idVictima, contactoData);
+      // actualizarContacto now returns { victima: { id: string } } on success, throws on error
 
-      if (respuesta?.exito) {
-        // Actualizar el store local
-        setDatosPersonales({
-          ...datosPersonales,
-          celular: contactoData.celular !== undefined ? contactoData.celular : datosPersonales.celular,
-          correo: contactoData.correo !== undefined ? contactoData.correo : datosPersonales.correo,
-        });
-        toast.success(respuesta.mensaje || "Contacto actualizado correctamente");
-        return true;
-      } else {
-        const mensajeError = respuesta.error ? `${respuesta.mensaje} - ${respuesta.error}` : respuesta.mensaje;
-        toast.error(mensajeError);
-        return false;
-      }
+      // Actualizar el store local
+      setDatosPersonales({
+        ...datosPersonales,
+        celular: contactoData.celular !== undefined ? contactoData.celular : datosPersonales.celular,
+        correo: contactoData.correo !== undefined ? contactoData.correo : datosPersonales.correo,
+      });
+      toast.success("Contacto actualizado correctamente");
+      return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Error al actualizar contacto");
       return false;
